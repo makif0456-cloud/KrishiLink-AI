@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Outfit', 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f7f9f5;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark body {
+  background-color: #0c1610;
+  color: #f1f5f9;
+}
+
+/* Accessible touch targets for farmers */
+.touch-btn {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Card hover & active click feedback */
+.farmer-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.farmer-card:hover {
+  transform: translateY(-2px);
+}
+.farmer-card:active {
+  transform: scale(0.98);
+}
+
+/* Modern Agriculture Gradients */
+.bg-agri-gradient {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #388e3c 100%);
+}
+
+.bg-agri-gold-gradient {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+}
+
+.bg-agri-dark-gradient {
+  background: linear-gradient(135deg, #0d1e13 0%, #142a1b 50%, #1a3623 100%);
+}
+
+/* Voice pulse animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 16px rgba(46, 125, 50, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
+  }
+}
+
+.voice-pulse {
+  animation: pulse-ring 2.2s infinite ease-in-out;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(46, 125, 50, 0.25);
+  border-radius: 9999px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,0 +1,31 @@
+{
+  "name": "krishilink-server",
+  "version": "1.0.0",
+  "description": "KrishiLink AI - Node.js Express Backend for SIH 26132",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node --test tests/routes/auth.test.js tests/routes/market.test.js tests/routes/trading.test.js tests/routes/intelligence.test.js tests/routes/phase4.test.js",
+    "db:init": "node src/db/init.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "pg": "^8.11.5",
+    "uuid": "^9.0.1",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "supertest": "^6.3.4"
+  }
+}
