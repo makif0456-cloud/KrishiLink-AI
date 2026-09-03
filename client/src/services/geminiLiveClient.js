@@ -28,9 +28,24 @@ export class GeminiLiveClient {
   async connect(token = '') {
     this.onStatusChange('CONNECTING');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname === 'localhost' ? 'localhost:3001' : window.location.host;
-    const url = `${protocol}//${host}/api/v1/voice/live${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let host = window.location.hostname === 'localhost' ? 'localhost:3001' : window.location.host;
+
+    if (import.meta.env.VITE_WS_URL) {
+      // Direct override if specified
+    } else if (import.meta.env.VITE_API_BASE_URL) {
+      try {
+        const apiUrl = new URL(import.meta.env.VITE_API_BASE_URL);
+        protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        host = apiUrl.host;
+      } catch (e) {
+        // Fall back to window.location host
+      }
+    }
+
+    const url = import.meta.env.VITE_WS_URL
+      ? `${import.meta.env.VITE_WS_URL}/api/v1/voice/live${token ? `?token=${encodeURIComponent(token)}` : ''}`
+      : `${protocol}//${host}/api/v1/voice/live${token ? `?token=${encodeURIComponent(token)}` : ''}`;
 
     try {
       this.ws = new WebSocket(url);
