@@ -8,7 +8,7 @@ KrishiLink AI follows a **farmer-first approach**, with a simple interface and v
 
 ## 🚀 Live Demo
 
-🌐 **Live Website:** https://krishilink-ai.vercel.app
+🌐 **Live Website:** (https://krishi-link-ai-gamma.vercel.app/)
 
 ## ✨ What can KrishiLink AI do?
 
