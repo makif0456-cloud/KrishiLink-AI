@@ -20,8 +20,8 @@ class RecommendationService {
     }
 
     const quantity = Number(lot.quantity) || 100;
-    const farmerLat = lot.latitude || 23.6341;
-    const farmerLng = lot.longitude || 77.4338;
+    const farmerLat = Number(lot.latitude) || 23.6341;
+    const farmerLng = Number(lot.longitude) || 77.4338;
     const commodityId = lot.commodity_id;
 
     // 1. Fetch Today's Mandi Prices for this commodity
