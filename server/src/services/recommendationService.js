@@ -9,7 +9,10 @@ const { query, isPgConnected, memoryDb } = require('../config/database');
 
 class RecommendationService {
   /**
-   * Deterministic recommendation engine comparing Mandis, Direct Buyers, and Storage Options
+   * Deterministic recommendation engine comparing:
+   * - Mandis
+   * - Direct Buyers
+   * - Storage Options
    */
   static async getRecommendationsForLot(lotId, userId = null) {
     const lot = await Lot.findById(lotId);
@@ -21,25 +24,34 @@ class RecommendationService {
     }
 
     const quantity = Number(lot.quantity) || 100;
+
+    // PostgreSQL NUMERIC values can arrive as strings.
+    // Always convert coordinates to Number before arithmetic.
     const farmerLat = Number(lot.latitude) || 23.6341;
     const farmerLng = Number(lot.longitude) || 77.4338;
+
     const commodityId = lot.commodity_id;
 
-    // 1. Fetch Today's Mandi Prices for this commodity
+    // =========================================================
+    // 1. FETCH MANDI PRICES
+    // =========================================================
+
     let prices = [];
 
     if (isPgConnected()) {
       const sql = `
-        SELECT mp.*, 
-               m.name_hi AS mandi_name_hi, 
-               m.name_en AS mandi_name_en,
-               m.district AS mandi_district, 
-               m.state AS mandi_state,
-               m.latitude AS mandi_lat, 
-               m.longitude AS mandi_lng, 
-               m.commission_rate
+        SELECT
+          mp.*,
+          m.name_hi AS mandi_name_hi,
+          m.name_en AS mandi_name_en,
+          m.district AS mandi_district,
+          m.state AS mandi_state,
+          m.latitude AS mandi_lat,
+          m.longitude AS mandi_lng,
+          m.commission_rate
         FROM mandi_prices mp
-        JOIN mandis m ON mp.mandi_id = m.id
+        JOIN mandis m
+          ON mp.mandi_id = m.id
         WHERE mp.commodity_id = $1
         ORDER BY mp.modal_price DESC
       `;
@@ -63,64 +75,130 @@ class RecommendationService {
             mandi_state: mandi.state,
             mandi_lat: mandi.latitude,
             mandi_lng: mandi.longitude,
-            commission_rate: mandi.commission_rate || 2.0
+            commission_rate:
+              mandi.commission_rate || 2.0
           };
         });
     }
 
-    // 2. Fetch Active Buyer Requirements / Offers for this commodity
-    const buyerRequirements = await BuyerRequirement.findAll({
-      commodityId,
-      status: 'active'
-    });
+    // =========================================================
+    // 2. FETCH ACTIVE BUYERS
+    // =========================================================
 
+    const buyerRequirements =
+      await BuyerRequirement.findAll({
+        commodityId,
+        status: 'active'
+      });
+
+    // Existing offers can be used later for future ranking logic.
     const lotOffers = await Offer.findByLot(lotId);
+
+    // Prevent unused-variable warnings in some environments.
+    void userId;
+    void lotOffers;
 
     const evaluatedOptions = [];
 
-    // ---------------------------------------------------------
-    // EVALUATE MANDIS
-    // ---------------------------------------------------------
-    for (const p of prices) {
-      const mandiPrice = Number(p.modal_price) || 2400;
-      const grossRevenue = mandiPrice * quantity;
+    // =========================================================
+    // 3. BASE MARKET PRICE
+    // =========================================================
 
-      const logistics = await LogisticsService.estimateCosts({
-        fromLat: farmerLat,
-        fromLng: farmerLng,
-        toLat: p.mandi_lat,
-        toLng: p.mandi_lng,
-        quantity,
-        grossRevenue,
-        isMandi: true,
-        commissionRate: p.commission_rate || 2.0,
-        pickupOffered: false
-      });
+    const baseModalPrice =
+      prices.length > 0
+        ? Number(prices[0].modal_price) || 2500
+        : 2500;
+
+    // =========================================================
+    // 4. EVALUATE REAL MANDIS
+    // =========================================================
+
+    for (const p of prices) {
+      const mandiPrice =
+        Number(p.modal_price) || 2400;
+
+      const grossRevenue =
+        mandiPrice * quantity;
+
+      const mandiLat =
+        Number(p.mandi_lat) || farmerLat;
+
+      const mandiLng =
+        Number(p.mandi_lng) || farmerLng;
+
+      const logistics =
+        await LogisticsService.estimateCosts({
+          fromLat: farmerLat,
+          fromLng: farmerLng,
+
+          toLat: mandiLat,
+          toLng: mandiLng,
+
+          quantity,
+          grossRevenue,
+
+          isMandi: true,
+
+          commissionRate:
+            Number(p.commission_rate) || 2.0,
+
+          pickupOffered: false
+        });
 
       const netRealization =
-        grossRevenue - logistics.total_deductions;
+        grossRevenue -
+        logistics.total_deductions;
 
       evaluatedOptions.push({
-        option_id: `mandi_${p.mandi_id}`,
-        option_type: 'mandi',
-        title_hi: `${p.mandi_name_hi}`,
-        title_en: `${p.mandi_name_en}`,
-        subtitle: `मंडी नीलामी भाव • ${p.mandi_district || p.mandi_state}`,
+        option_id:
+          `mandi_${p.mandi_id}`,
 
-        price_per_quintal: mandiPrice,
+        option_type:
+          'mandi',
+
+        title_hi:
+          p.mandi_name_hi || 'स्थानीय मंडी',
+
+        title_en:
+          p.mandi_name_en || 'Local Mandi',
+
+        subtitle:
+          `मंडी नीलामी भाव • ${
+            p.mandi_district ||
+            p.mandi_state ||
+            'स्थानीय क्षेत्र'
+          }`,
+
+        price_per_quintal:
+          mandiPrice,
+
         quantity,
 
-        gross_revenue: grossRevenue,
+        gross_revenue:
+          grossRevenue,
 
-        distance_km: logistics.distance_km,
-        transport_cost: logistics.transport_cost,
-        loading_cost: logistics.loading_cost,
-        commission_cost: logistics.commission_cost,
+        distance_km:
+          logistics.distance_km,
+
+        transport_cost:
+          logistics.transport_cost,
+
+        loading_cost:
+          logistics.loading_cost,
+
+        commission_cost:
+          logistics.commission_cost,
+
         storage_cost: 0,
-        other_costs: logistics.other_costs,
 
-        total_deductions: logistics.total_deductions,
-        net_realization: netRealization,
+        other_costs:
+          logistics.other_costs,
+
+        total_deductions:
+          logistics.total_deductions,
+
+        net_realization:
+          netRealization,
 
         badge_text:
           logistics.distance_km <= 35
@@ -129,102 +207,399 @@ class RecommendationService {
 
         recommendation_reason:
           `मंडी में भाव ₹${mandiPrice}/क्विंटल है। ` +
-          `दूरी ${logistics.distance_km} किमी पर परिवहन ₹${logistics.transport_cost} ` +
-          `और मंडी आढ़त ₹${logistics.commission_cost} काटकर ` +
-          `शुद्ध प्राप्ति ₹${netRealization.toLocaleString('en-IN')} होगी।`,
+          `दूरी ${logistics.distance_km} किमी पर ` +
+          `परिवहन ₹${logistics.transport_cost}, ` +
+          `लोडिंग ₹${logistics.loading_cost} और ` +
+          `मंडी आढ़त ₹${logistics.commission_cost} ` +
+          `घटाकर शुद्ध प्राप्ति ` +
+          `₹${netRealization.toLocaleString('en-IN')} होगी।`,
 
-        is_direct_buyer: false,
-        pickup_offered: false,
+        is_direct_buyer:
+          false,
 
-        latitude: p.mandi_lat,
-        longitude: p.mandi_lng
+        pickup_offered:
+          false,
+
+        latitude:
+          mandiLat,
+
+        longitude:
+          mandiLng
       });
     }
 
-    // ---------------------------------------------------------
-    // EVALUATE DIRECT BUYERS
-    // ---------------------------------------------------------
-    for (const req of buyerRequirements) {
-      const buyerPrice = Number(req.price_max) || 2450;
-      const grossRevenue = buyerPrice * quantity;
-      const pickupAvailable = Boolean(req.pickup_available);
+    // =========================================================
+    // 5. EVALUATE REAL DIRECT BUYERS
+    // =========================================================
 
-      const logistics = await LogisticsService.estimateCosts({
-        fromLat: farmerLat,
-        fromLng: farmerLng,
-        toLat: req.buyer_lat,
-        toLng: req.buyer_lng,
-        quantity,
-        grossRevenue,
-        isMandi: false,
-        pickupOffered: pickupAvailable
-      });
+    for (const req of buyerRequirements) {
+      const buyerPrice =
+        Number(req.price_max) || 2450;
+
+      const grossRevenue =
+        buyerPrice * quantity;
+
+      const pickupAvailable =
+        Boolean(req.pickup_available);
+
+      const buyerLat =
+        Number(req.buyer_lat) || farmerLat;
+
+      const buyerLng =
+        Number(req.buyer_lng) || farmerLng;
+
+      const logistics =
+        await LogisticsService.estimateCosts({
+          fromLat: farmerLat,
+          fromLng: farmerLng,
+
+          toLat: buyerLat,
+          toLng: buyerLng,
+
+          quantity,
+          grossRevenue,
+
+          isMandi: false,
+
+          pickupOffered:
+            pickupAvailable
+        });
 
       const netRealization =
-        grossRevenue - logistics.total_deductions;
+        grossRevenue -
+        logistics.total_deductions;
 
       evaluatedOptions.push({
-        option_id: `buyer_req_${req.id}`,
-        option_type: 'direct_buyer',
+        option_id:
+          `buyer_req_${req.id}`,
+
+        option_type:
+          'direct_buyer',
 
         title_hi:
-          `${req.business_name || req.buyer_name} (सत्यापित खरीदार)`,
+          `${req.business_name || req.buyer_name || 'सत्यापित खरीदार'} (सत्यापित खरीदार)`,
 
         title_en:
-          `${req.business_name || req.buyer_name} (Verified Buyer)`,
+          `${req.business_name || req.buyer_name || 'Verified Buyer'} (Verified Buyer)`,
 
         subtitle:
           pickupAvailable
             ? 'सीधा खेत से उठान • 0% कमीशन'
-            : `${req.buyer_district || 'इंदौर'} • 0% कमीशन`,
+            : `${req.buyer_district || 'स्थानीय क्षेत्र'} • 0% कमीशन`,
 
-        price_per_quintal: buyerPrice,
+        price_per_quintal:
+          buyerPrice,
+
         quantity,
 
-        gross_revenue: grossRevenue,
+        gross_revenue:
+          grossRevenue,
 
-        distance_km: logistics.distance_km,
-        transport_cost: logistics.transport_cost,
-        loading_cost: logistics.loading_cost,
+        distance_km:
+          logistics.distance_km,
+
+        transport_cost:
+          logistics.transport_cost,
+
+        loading_cost:
+          logistics.loading_cost,
+
         commission_cost: 0,
+
         storage_cost: 0,
+
         other_costs: 0,
 
-        total_deductions: logistics.total_deductions,
-        net_realization: netRealization,
+        total_deductions:
+          logistics.total_deductions,
+
+        net_realization:
+          netRealization,
 
         badge_text:
           pickupAvailable
             ? '🚚 खेत से पिकअप + 0% कमीशन'
             : 'सीधा खरीदार',
 
-        recommendation_reason: pickupAvailable
-          ? `खरीदार द्वारा खेत से निःशुल्क पिकअप दिया जा रहा है। ` +
-            `कोई मंडी कमीशन नहीं लगेगा। ` +
-            `शुद्ध प्राप्ति ₹${netRealization.toLocaleString('en-IN')} पूरी प्राप्त होगी।`
-          : `सीधे खरीदार को बेचने पर शून्य मंडी कमीशन से ` +
-            `₹${(grossRevenue * 0.025).toLocaleString('en-IN')} की बचत होगी।`,
+        recommendation_reason:
+          pickupAvailable
+            ? `खरीदार द्वारा खेत से निःशुल्क पिकअप दिया जा रहा है। ` +
+              `कोई मंडी कमीशन नहीं लगेगा। ` +
+              `शुद्ध प्राप्ति ₹${netRealization.toLocaleString('en-IN')} होगी।`
+            : `सीधे खरीदार को बेचने पर शून्य मंडी कमीशन से ` +
+              `₹${(grossRevenue * 0.025).toLocaleString('en-IN')} ` +
+              `तक की बचत हो सकती है।`,
 
-        is_direct_buyer: true,
-        pickup_offered: pickupAvailable,
+        is_direct_buyer:
+          true,
 
-        buyer_id: req.buyer_id,
+        pickup_offered:
+          pickupAvailable,
 
-        latitude: req.buyer_lat,
-        longitude: req.buyer_lng
+        buyer_id:
+          req.buyer_id,
+
+        latitude:
+          buyerLat,
+
+        longitude:
+          buyerLng
+      });
+    }
+
+    // =========================================================
+    // 6. DEMO FALLBACK OPTIONS
+    //
+    // If database has no Mandi or Buyer data for this commodity,
+    // create demo options so the farmer can compare:
+    //
+    // Mandi vs Direct Buyer vs Warehouse
+    // =========================================================
+
+    const hasMandiOption =
+      evaluatedOptions.some(
+        option =>
+          option.option_type === 'mandi'
+      );
+
+    const hasBuyerOption =
+      evaluatedOptions.some(
+        option =>
+          option.option_type === 'direct_buyer'
+      );
+
+    // ---------------------------------------------------------
+    // DEMO MANDI
+    // ---------------------------------------------------------
+
+    if (!hasMandiOption) {
+      const mandiPrice =
+        baseModalPrice;
+
+      const mandiGross =
+        mandiPrice * quantity;
+
+      const mandiLat =
+        farmerLat + 0.12;
+
+      const mandiLng =
+        farmerLng + 0.08;
+
+      const mandiLogistics =
+        await LogisticsService.estimateCosts({
+          fromLat: farmerLat,
+          fromLng: farmerLng,
+
+          toLat: mandiLat,
+          toLng: mandiLng,
+
+          quantity,
+
+          grossRevenue:
+            mandiGross,
+
+          isMandi: true,
+
+          commissionRate: 2.0,
+
+          pickupOffered: false
+        });
+
+      const mandiNet =
+        mandiGross -
+        mandiLogistics.total_deductions;
+
+      evaluatedOptions.push({
+        option_id:
+          'demo_mandi',
+
+        option_type:
+          'mandi',
+
+        title_hi:
+          'बैरसिया मंडी',
+
+        title_en:
+          'Berasia Mandi',
+
+        subtitle:
+          'स्थानीय मंडी • आज का मॉडल भाव',
+
+        price_per_quintal:
+          mandiPrice,
+
+        quantity,
+
+        gross_revenue:
+          mandiGross,
+
+        distance_km:
+          mandiLogistics.distance_km,
+
+        transport_cost:
+          mandiLogistics.transport_cost,
+
+        loading_cost:
+          mandiLogistics.loading_cost,
+
+        commission_cost:
+          mandiLogistics.commission_cost,
+
+        storage_cost: 0,
+
+        other_costs:
+          mandiLogistics.other_costs,
+
+        total_deductions:
+          mandiLogistics.total_deductions,
+
+        net_realization:
+          mandiNet,
+
+        badge_text:
+          '🏪 स्थानीय मंडी',
+
+        recommendation_reason:
+          `मंडी भाव ₹${mandiPrice}/क्विंटल है। ` +
+          `परिवहन ₹${mandiLogistics.transport_cost}, ` +
+          `लोडिंग ₹${mandiLogistics.loading_cost} और ` +
+          `मंडी आढ़त ₹${mandiLogistics.commission_cost} ` +
+          `घटाने के बाद अनुमानित शुद्ध प्राप्ति ` +
+          `₹${mandiNet.toLocaleString('en-IN')} होगी।`,
+
+        is_direct_buyer:
+          false,
+
+        pickup_offered:
+          false,
+
+        latitude:
+          mandiLat,
+
+        longitude:
+          mandiLng
       });
     }
 
     // ---------------------------------------------------------
-    // EVALUATE STORAGE + SELL LATER OPTION
+    // DEMO DIRECT BUYER
     // ---------------------------------------------------------
-    const baseModalPrice =
-      prices.length > 0
-        ? Number(prices[0].modal_price) || 2500
-        : 2500;
+
+    if (!hasBuyerOption) {
+      const buyerPrice =
+        baseModalPrice + 100;
+
+      const buyerGross =
+        buyerPrice * quantity;
+
+      const buyerLat =
+        farmerLat + 0.18;
+
+      const buyerLng =
+        farmerLng + 0.10;
+
+      const buyerLogistics =
+        await LogisticsService.estimateCosts({
+          fromLat: farmerLat,
+          fromLng: farmerLng,
+
+          toLat: buyerLat,
+          toLng: buyerLng,
+
+          quantity,
+
+          grossRevenue:
+            buyerGross,
+
+          isMandi: false,
+
+          pickupOffered: true
+        });
+
+      const buyerNet =
+        buyerGross -
+        buyerLogistics.total_deductions;
+
+      evaluatedOptions.push({
+        option_id:
+          'demo_direct_buyer',
+
+        option_type:
+          'direct_buyer',
+
+        title_hi:
+          'शर्मा ट्रेडर्स (सत्यापित खरीदार)',
+
+        title_en:
+          'Sharma Traders (Verified Buyer)',
+
+        subtitle:
+          'खेत से पिकअप • 0% कमीशन',
+
+        price_per_quintal:
+          buyerPrice,
+
+        quantity,
+
+        gross_revenue:
+          buyerGross,
+
+        distance_km:
+          buyerLogistics.distance_km,
+
+        transport_cost:
+          buyerLogistics.transport_cost,
+
+        loading_cost:
+          buyerLogistics.loading_cost,
+
+        commission_cost: 0,
+
+        storage_cost: 0,
+
+        other_costs: 0,
+
+        total_deductions:
+          buyerLogistics.total_deductions,
+
+        net_realization:
+          buyerNet,
+
+        badge_text:
+          '🚚 खेत से पिकअप + 0% कमीशन',
+
+        recommendation_reason:
+          `सत्यापित खरीदार ₹${buyerPrice}/क्विंटल ` +
+          `दे रहा है और खेत से निःशुल्क पिकअप की सुविधा है। ` +
+          `मंडी कमीशन नहीं लगेगा। ` +
+          `अनुमानित शुद्ध प्राप्ति ` +
+          `₹${buyerNet.toLocaleString('en-IN')} होगी।`,
+
+        is_direct_buyer:
+          true,
+
+        pickup_offered:
+          true,
+
+        buyer_id:
+          'demo-buyer-sharma',
+
+        latitude:
+          buyerLat,
+
+        longitude:
+          buyerLng
+      });
+    }
+
+    // =========================================================
+    // 7. STORAGE + SELL LATER
+    // =========================================================
 
     const projectedFuturePrice =
-      Math.round(baseModalPrice * 1.075);
+      Math.round(
+        baseModalPrice * 1.075
+      );
 
     const projectedGross =
       projectedFuturePrice * quantity;
@@ -232,20 +607,31 @@ class RecommendationService {
     const storageDays = 30;
     const dailyStorageRate = 0.40;
 
-    const warehouseLat = farmerLat + 0.05;
-    const warehouseLng = farmerLng + 0.05;
+    const warehouseLat =
+      farmerLat + 0.05;
+
+    const warehouseLng =
+      farmerLng + 0.05;
 
     const storageLogistics =
       await LogisticsService.estimateCosts({
         fromLat: farmerLat,
         fromLng: farmerLng,
+
         toLat: warehouseLat,
         toLng: warehouseLng,
+
         quantity,
-        grossRevenue: projectedGross,
+
+        grossRevenue:
+          projectedGross,
+
         isMandi: false,
+
         storageDays,
+
         dailyStorageRate,
+
         pickupOffered: false
       });
 
@@ -254,8 +640,11 @@ class RecommendationService {
       storageLogistics.total_deductions;
 
     evaluatedOptions.push({
-      option_id: 'storage_30days',
-      option_type: 'storage_hold',
+      option_id:
+        'storage_30days',
+
+      option_type:
+        'storage_hold',
 
       title_hi:
         'वेयरहाउस में रखें और 30 दिन बाद बेचें',
@@ -266,16 +655,28 @@ class RecommendationService {
       subtitle:
         `अनुमानित भविष्य भाव: ₹${projectedFuturePrice}/क्विंटल (+7.5%)`,
 
-      price_per_quintal: projectedFuturePrice,
+      price_per_quintal:
+        projectedFuturePrice,
+
       quantity,
 
-      gross_revenue: projectedGross,
+      gross_revenue:
+        projectedGross,
 
-      distance_km: storageLogistics.distance_km,
-      transport_cost: storageLogistics.transport_cost,
-      loading_cost: storageLogistics.loading_cost,
+      distance_km:
+        storageLogistics.distance_km,
+
+      transport_cost:
+        storageLogistics.transport_cost,
+
+      loading_cost:
+        storageLogistics.loading_cost,
+
       commission_cost: 0,
-      storage_cost: storageLogistics.storage_cost,
+
+      storage_cost:
+        storageLogistics.storage_cost,
+
       other_costs: 0,
 
       total_deductions:
@@ -284,7 +685,8 @@ class RecommendationService {
       net_realization:
         storageNetRealization,
 
-      badge_text: '📈 मूल्य वृद्धि अनुमान',
+      badge_text:
+        '📈 मूल्य वृद्धि अनुमान',
 
       recommendation_reason:
         `30 दिन में भाव ₹${projectedFuturePrice}/क्विंटल तक बढ़ने का अनुमान है। ` +
@@ -292,44 +694,112 @@ class RecommendationService {
         `घटाने के बाद अनुमानित शुद्ध प्राप्ति ` +
         `₹${storageNetRealization.toLocaleString('en-IN')} होगी।`,
 
-      is_direct_buyer: false,
-      pickup_offered: false,
+      is_direct_buyer:
+        false,
 
-      latitude: warehouseLat,
-      longitude: warehouseLng
+      pickup_offered:
+        false,
+
+      latitude:
+        warehouseLat,
+
+      longitude:
+        warehouseLng
     });
 
-    // ---------------------------------------------------------
-    // SORT & RANK SELLING OPTIONS
-    // ---------------------------------------------------------
+    // =========================================================
+    // 8. SORT OPTIONS BY NET REALIZATION
+    // =========================================================
+
     evaluatedOptions.sort(
-      (a, b) => b.net_realization - a.net_realization
+      (a, b) =>
+        Number(b.net_realization || 0) -
+        Number(a.net_realization || 0)
     );
+
+    // =========================================================
+    // 9. LOCAL MANDI BENCHMARK
+    // =========================================================
 
     const localMandi =
       evaluatedOptions.find(
-        o => o.option_type === 'mandi'
+        option =>
+          option.option_type === 'mandi'
       ) || evaluatedOptions[0];
 
     const benchmarkNet =
-      localMandi.net_realization;
+      Number(
+        localMandi?.net_realization || 0
+      );
 
-    evaluatedOptions.forEach((opt, idx) => {
-      opt.rank = idx + 1;
+    // =========================================================
+    // 10. ASSIGN RANKS
+    // =========================================================
 
-      opt.difference_vs_local_mandi =
-        opt.net_realization - benchmarkNet;
+    evaluatedOptions.forEach(
+      (option, index) => {
+        option.rank =
+          index + 1;
 
-      opt.is_top_recommendation =
-        idx === 0;
-    });
+        option.difference_vs_local_mandi =
+          Number(option.net_realization || 0) -
+          benchmarkNet;
+
+        option.is_top_recommendation =
+          index === 0;
+      }
+    );
 
     const topRecommendation =
       evaluatedOptions[0];
 
+    // =========================================================
+    // 11. DYNAMIC "WHY IS THIS BEST?" REASON
+    // =========================================================
+
+    let topRecommendationReason = '';
+
+    if (
+      topRecommendation.option_type ===
+      'direct_buyer'
+    ) {
+      if (topRecommendation.pickup_offered) {
+        topRecommendationReason =
+          'खेत से सीधे पिकअप और 0% मंडी कमीशन के कारण परिवहन व मंडी कटौती की बचत होती है।';
+      } else {
+        topRecommendationReason =
+          'सीधे खरीदार को बेचने पर मंडी कमीशन नहीं लगता और शुद्ध प्राप्ति अधिक हो सकती है।';
+      }
+    } else if (
+      topRecommendation.option_type ===
+      'mandi'
+    ) {
+      topRecommendationReason =
+        'उपलब्ध मंडियों में इसकी शुद्ध प्राप्ति सबसे अधिक है और परिवहन तथा मंडी कटौती के बाद भी यह सर्वोत्तम विकल्प है।';
+    } else if (
+      topRecommendation.option_type ===
+      'storage_hold'
+    ) {
+      topRecommendationReason =
+        'अनुमानित भविष्य भाव में 7.5% वृद्धि के कारण 30 दिन बाद बिक्री से बेहतर सकल मूल्य मिल सकता है। भंडारण, परिवहन और लोडिंग खर्च घटाने के बाद भी इसकी शुद्ध प्राप्ति सबसे अधिक है।';
+    }
+
+    // Add dynamic reason to top option.
+    if (topRecommendation) {
+      topRecommendation.top_reason =
+        topRecommendationReason;
+    }
+
+    // =========================================================
+    // 12. RETURN RECOMMENDATION
+    // =========================================================
+
     return {
-      lot_id: lot.id,
-      commodity_id: lot.commodity_id,
+      lot_id:
+        lot.id,
+
+      commodity_id:
+        lot.commodity_id,
 
       commodity_name_hi:
         lot.commodity_name_hi,
@@ -350,20 +820,29 @@ class RecommendationService {
 
       farmer_location: {
         village:
-          lot.farmer_village || 'बैरसिया',
+          lot.farmer_village ||
+          'बैरसिया',
 
         district:
-          lot.farmer_district || 'भोपाल',
+          lot.farmer_district ||
+          'भोपाल',
 
         state:
-          lot.farmer_state || 'Madhya Pradesh',
+          lot.farmer_state ||
+          'Madhya Pradesh',
 
-        latitude: farmerLat,
-        longitude: farmerLng
+        latitude:
+          farmerLat,
+
+        longitude:
+          farmerLng
       },
 
       top_recommendation:
         topRecommendation,
+
+      top_recommendation_reason:
+        topRecommendationReason,
 
       all_options:
         evaluatedOptions,
@@ -372,35 +851,44 @@ class RecommendationService {
         evaluatedOptions.length,
 
       benchmark_local_mandi: {
-        name: localMandi.title_hi,
+        name:
+          localMandi?.title_hi ||
+          'स्थानीय मंडी',
+
         net_realization:
-          localMandi.net_realization
+          benchmarkNet
       },
 
       additional_gain_top_option:
         Math.max(
           0,
-          topRecommendation.net_realization -
+          Number(
+            topRecommendation?.net_realization || 0
+          ) -
             benchmarkNet
         ),
 
       formula:
-        "NET_REALIZATION = GROSS_REVENUE - TRANSPORT - LOADING - COMMISSION - STORAGE - OTHER_COSTS",
+        'NET_REALIZATION = GROSS_REVENUE - TRANSPORT - LOADING - COMMISSION - STORAGE - OTHER_COSTS',
 
-      is_demo_data: true,
+      is_demo_data:
+        true,
 
       disclaimer:
         DEMO_DISCLAIMER_HI
     };
   }
 
-
   // =========================================================
   // MARKET INTELLIGENCE
-  // Compare multiple crops across multiple mandis
   // =========================================================
+
   static async getMarketIntelligence() {
     let marketData = [];
+
+    // =========================================================
+    // FETCH MARKET DATA
+    // =========================================================
 
     if (isPgConnected()) {
       const sql = `
@@ -435,61 +923,72 @@ class RecommendationService {
           mp.modal_price DESC
       `;
 
-      const res = await query(sql);
-      marketData = res.rows;
+      const res =
+        await query(sql);
 
+      marketData =
+        res.rows;
     } else {
       marketData =
-        (memoryDb.mandi_prices || []).map(price => {
+        (memoryDb.mandi_prices || [])
+          .map(price => {
+            const commodity =
+              (memoryDb.commodities || [])
+                .find(
+                  c =>
+                    c.id ===
+                    price.commodity_id
+                ) || {};
 
-          const commodity =
-            (memoryDb.commodities || []).find(
-              c => c.id === price.commodity_id
-            ) || {};
+            const mandi =
+              (memoryDb.mandis || [])
+                .find(
+                  m =>
+                    m.id ===
+                    price.mandi_id
+                ) || {};
 
-          const mandi =
-            (memoryDb.mandis || []).find(
-              m => m.id === price.mandi_id
-            ) || {};
+            return {
+              ...price,
 
-          return {
-            ...price,
+              commodity_name_hi:
+                commodity.name_hi,
 
-            commodity_name_hi:
-              commodity.name_hi,
+              commodity_name_en:
+                commodity.name_en,
 
-            commodity_name_en:
-              commodity.name_en,
+              commodity_icon:
+                commodity.icon,
 
-            commodity_icon:
-              commodity.icon,
+              mandi_name_hi:
+                mandi.name_hi,
 
-            mandi_name_hi:
-              mandi.name_hi,
+              mandi_name_en:
+                mandi.name_en,
 
-            mandi_name_en:
-              mandi.name_en,
+              mandi_district:
+                mandi.district,
 
-            mandi_district:
-              mandi.district,
-
-            mandi_state:
-              mandi.state
-          };
-        });
+              mandi_state:
+                mandi.state
+            };
+          });
     }
 
-    // ---------------------------------------------------------
-    // GROUP PRICES BY COMMODITY
-    // ---------------------------------------------------------
+    // =========================================================
+    // GROUP BY COMMODITY
+    // =========================================================
+
     const grouped = {};
 
     for (const row of marketData) {
-      const id = row.commodity_id;
+      const id =
+        row.commodity_id;
 
       if (!grouped[id]) {
         grouped[id] = {
-          commodity_id: id,
+          commodity_id:
+            id,
 
           commodity_name_hi:
             row.commodity_name_hi,
@@ -498,7 +997,8 @@ class RecommendationService {
             row.commodity_name_en,
 
           commodity_icon:
-            row.commodity_icon || '🌾',
+            row.commodity_icon ||
+            '🌾',
 
           prices: []
         };
@@ -512,13 +1012,16 @@ class RecommendationService {
         price > 0
       ) {
         grouped[id].prices.push({
-          modal_price: price,
+          modal_price:
+            price,
 
           min_price:
-            Number(row.min_price) || price,
+            Number(row.min_price) ||
+            price,
 
           max_price:
-            Number(row.max_price) || price,
+            Number(row.max_price) ||
+            price,
 
           mandi_id:
             row.mandi_id,
@@ -538,17 +1041,21 @@ class RecommendationService {
       }
     }
 
-    // ---------------------------------------------------------
-    // CALCULATE MARKET SCORE FOR EACH CROP
-    // ---------------------------------------------------------
+    // =========================================================
+    // CALCULATE MARKET SCORE
+    // =========================================================
+
     const crops =
       Object.values(grouped)
-        .filter(crop => crop.prices.length > 0)
+        .filter(
+          crop =>
+            crop.prices.length > 0
+        )
         .map(crop => {
-
           const prices =
             crop.prices.map(
-              p => p.modal_price
+              p =>
+                p.modal_price
             );
 
           const averagePrice =
@@ -556,7 +1063,8 @@ class RecommendationService {
               (sum, price) =>
                 sum + price,
               0
-            ) / prices.length;
+            ) /
+            prices.length;
 
           const highestPrice =
             Math.max(...prices);
@@ -570,24 +1078,28 @@ class RecommendationService {
 
           const spreadPercent =
             averagePrice > 0
-              ? (priceSpread / averagePrice) * 100
+              ? (priceSpread /
+                  averagePrice) *
+                100
               : 0;
 
-          // More mandi coverage = stronger market signal
+          // More mandi coverage = stronger signal
           const mandiCoverageScore =
             Math.min(
-              crop.prices.length / 5,
+              crop.prices.length /
+                5,
               1
             ) * 30;
 
           // Higher average price = stronger opportunity
           const priceStrengthScore =
             Math.min(
-              averagePrice / 5000,
+              averagePrice /
+                5000,
               1
             ) * 50;
 
-          // Smaller spread = more stable market
+          // Smaller spread = more stable
           const stabilityScore =
             Math.max(
               0,
@@ -601,11 +1113,11 @@ class RecommendationService {
           const marketScore =
             Math.round(
               mandiCoverageScore +
-              priceStrengthScore +
-              stabilityScore
+                priceStrengthScore +
+                stabilityScore
             );
 
-          // Find highest-paying mandi
+          // Highest paying mandi
           const bestMandi =
             crop.prices.reduce(
               (best, current) =>
@@ -647,7 +1159,9 @@ class RecommendationService {
 
             spread_percent:
               Number(
-                spreadPercent.toFixed(2)
+                spreadPercent.toFixed(
+                  2
+                )
               ),
 
             best_mandi: {
@@ -674,15 +1188,17 @@ class RecommendationService {
               marketScore,
 
             price_analysis:
-              highestPrice > averagePrice
+              highestPrice >
+              averagePrice
                 ? `₹${highestPrice.toLocaleString('en-IN')} तक का सर्वोच्च मंडी भाव उपलब्ध है।`
                 : 'बाजार भाव अपेक्षाकृत स्थिर है।'
           };
         });
 
-    // ---------------------------------------------------------
+    // =========================================================
     // RANK CROPS
-    // ---------------------------------------------------------
+    // =========================================================
+
     crops.sort(
       (a, b) =>
         b.market_score -
@@ -691,18 +1207,21 @@ class RecommendationService {
 
     crops.forEach(
       (crop, index) => {
-        crop.rank = index + 1;
+        crop.rank =
+          index + 1;
 
         crop.is_top_market =
           index === 0;
       }
     );
 
-    // ---------------------------------------------------------
+    // =========================================================
     // RETURN MARKET INTELLIGENCE
-    // ---------------------------------------------------------
+    // =========================================================
+
     return {
-      ranked_crops: crops,
+      ranked_crops:
+        crops,
 
       total_crops_analyzed:
         crops.length,
@@ -724,7 +1243,8 @@ class RecommendationService {
           'Weighted score based on price strength, mandi coverage and price stability'
       },
 
-      is_demo_data: true,
+      is_demo_data:
+        true,
 
       disclaimer:
         DEMO_DISCLAIMER_HI
