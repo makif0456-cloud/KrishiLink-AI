@@ -1,48 +1,128 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Home, TrendingUp, PlusCircle, Package, ShoppingBag } from 'lucide-react';
+import { Home, IndianRupee, Package, ShoppingCart, Wheat } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
-export default function BottomNav() {
-  const { t } = useLanguage();
+const BottomNav = ({ language = 'hi' }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const navItems = [
-    { to: '/', label: t('home'), icon: Home },
-    { to: '/market', label: t('prices'), icon: TrendingUp },
-    { to: '/sell', label: t('sell'), icon: PlusCircle, isHighlight: true },
-    { to: '/my-lots', label: t('my_lots'), icon: Package },
-    { to: '/orders', label: t('orders'), icon: ShoppingBag }
+  const items = [
+    {
+      path: '/',
+      label: language === 'hi' ? 'होम' : 'Home',
+      icon: Home,
+    },
+    {
+      path: '/market',
+      label: language === 'hi' ? 'भाव' : 'Prices',
+      icon: IndianRupee,
+    },
+    {
+      path: '/my-lots',
+      label: language === 'hi' ? 'फसल' : 'My Lots',
+      icon: Wheat,
+    },
+    {
+      path: '/orders',
+      label: language === 'hi' ? 'ऑर्डर' : 'Orders',
+      icon: Package,
+    },
   ];
 
+  const isSellPage =
+    location.pathname === '/sell' ||
+    location.pathname === '/create-lot';
+
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-darkbg-surface/95 backdrop-blur-md border-t border-gray-200 dark:border-darkbg-border z-40 shadow-xl px-1.5 py-1 flex items-center justify-around transition-colors">
-      {navItems.map(item => {
-        const Icon = item.icon;
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center flex-1 py-1 text-center touch-btn transition-all duration-200 rounded-xl ${
-                isActive
-                  ? 'text-krishi-700 dark:text-kisan-gold font-black bg-krishi-50 dark:bg-darkbg-card shadow-xs'
-                  : 'text-gray-500 dark:text-darkbg-muted hover:text-gray-900 dark:hover:text-white font-medium'
-              } ${item.isHighlight ? 'relative -top-2.5' : ''}`
-            }
-          >
-            {item.isHighlight ? (
-              <div className="bg-gradient-to-tr from-krishi-600 to-krishi-500 text-white p-3 rounded-full shadow-lg border-2 border-white dark:border-darkbg-surface -mb-1 transform active:scale-95 transition">
-                <Icon className="w-5 h-5" />
-              </div>
-            ) : (
-              <Icon className="w-5 h-5 mb-0.5" />
-            )}
-            <span className="text-[10px] font-bold leading-tight mt-0.5 truncate max-w-[64px]">
-              {item.label}
+    <div className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(8px,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="mx-auto flex h-[68px] max-w-md items-center justify-around rounded-2xl border border-slate-200/80 bg-white/95 px-1 shadow-[0_8px_30px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#111914]/95">
+
+        {/* Home / Market / Lots */}
+        {items.slice(0, 2).map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                [
+                  'flex h-14 min-w-[58px] flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200',
+                  isActive
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'text-slate-500 dark:text-slate-400',
+                ].join(' ')
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    size={19}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  <span className="text-[10px] font-bold">
+                    {item.label}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
+
+        {/* Central Sell button */}
+        <button
+          onClick={() => navigate('/sell')}
+          className="relative -mt-7 flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-lg shadow-emerald-700/25 transition-all duration-200 active:scale-95 hover:bg-emerald-800"
+          aria-label={language === 'hi' ? 'फसल बेचें' : 'Sell crop'}
+        >
+          <div className="absolute inset-1 rounded-[13px] border border-white/20" />
+
+          <div className="flex flex-col items-center">
+            <ShoppingCart size={21} strokeWidth={2.3} />
+            <span className="mt-0.5 text-[8px] font-extrabold">
+              {language === 'hi' ? 'बेचें' : 'SELL'}
             </span>
-          </NavLink>
-        );
-      })}
-    </nav>
+          </div>
+
+          {isSellPage && (
+            <span className="absolute -bottom-1 h-1.5 w-1.5 rounded-full bg-amber-400" />
+          )}
+        </button>
+
+        {/* My Lots / Orders */}
+        {items.slice(2).map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                [
+                  'flex h-14 min-w-[58px] flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200',
+                  isActive
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'text-slate-500 dark:text-slate-400',
+                ].join(' ')
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    size={19}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  <span className="text-[10px] font-bold">
+                    {item.label}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
+      </div>
+    </div>
   );
-}
+};
+
+export default BottomNav;
