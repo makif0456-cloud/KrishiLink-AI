@@ -1,158 +1,63 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
-
   content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
-
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        /* =================================================
-           KRISHI — PRIMARY AGRICULTURE GREEN
-           ================================================= */
-
+        // Deep Agricultural Greens
         krishi: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+          50: '#f2f9f1',
+          100: '#e1f2df',
+          200: '#c4e5c1',
+          300: '#99d294',
+          400: '#67b760',
+          500: '#388e3c', // Primary Brand Green
+          600: '#2e7d32',
+          700: '#1b5e20',
+          800: '#144617',
+          900: '#0d3010',
+          950: '#061a08',
         },
-
-        /* =================================================
-           HARVEST / FARM GOLD
-           ================================================= */
-
-        'kisan-gold': '#facc15',
-
-        'kisan-amber': '#f59e0b',
-
-        /* =================================================
-           NATURAL SECONDARY COLORS
-           ================================================= */
-
-        earth: {
-          50: '#faf8f2',
-          100: '#f4efe3',
-          200: '#e7dcc6',
-          300: '#d6c5a5',
-          400: '#b89d70',
-          500: '#967548',
-          600: '#765936',
-          700: '#5d452d',
-          800: '#493727',
-          900: '#3d3025',
+        // Golden Harvest & Amber
+        kisan: {
+          gold: '#f59e0b',
+          amber: '#d97706',
+          soil: '#78350f',
+          sand: '#fef3c7',
+          terracotta: '#c2410c',
+          sky: '#0284c7'
         },
-
-        leaf: {
-          50: '#f4f8f1',
-          100: '#e5efdf',
-          200: '#cbdcc2',
-          300: '#abc49d',
-          400: '#82a971',
-          500: '#628d52',
-          600: '#4c733f',
-          700: '#3d5d35',
-          800: '#334b2f',
-          900: '#2b3e28',
-        },
-
-        sky: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-        },
-
-        /* =================================================
-           DARK AGRICULTURE SURFACES
-           ================================================= */
-
+        // Forest Night Surfaces for Dark Theme
         darkbg: {
-          DEFAULT: '#0c1510',
-          surface: '#101b14',
-          card: '#142119',
-          hover: '#1a2a20',
-          border: '#29392e',
-          muted: '#9aaa9c',
-          text: '#f2f7f2',
-        },
+          base: '#0c1610',
+          surface: '#14231a',
+          card: '#1a2e22',
+          border: '#243e2e',
+          hover: '#20392a',
+          text: '#f1f5f9',
+          muted: '#94a3b8'
+        }
       },
-
       fontFamily: {
-        sans: [
-          'Noto Sans Devanagari',
-          'Inter',
-          'Outfit',
-          'sans-serif',
-        ],
-
-        display: [
-          'Outfit',
-          'Noto Sans Devanagari',
-          'Inter',
-          'sans-serif',
-        ],
+        sans: ['Outfit', 'Inter', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        hindi: ['Noto Sans Devanagari', 'sans-serif']
       },
-
       boxShadow: {
-        'agri-sm':
-          '0 1px 2px rgba(15, 23, 15, 0.04), 0 4px 12px rgba(15, 23, 15, 0.04)',
-
-        'agri':
-          '0 2px 5px rgba(15, 23, 15, 0.05), 0 12px 30px rgba(15, 23, 15, 0.05)',
-
-        'agri-lg':
-          '0 8px 18px rgba(15, 23, 15, 0.07), 0 25px 55px rgba(15, 23, 15, 0.06)',
+        'farmer': '0 4px 20px -2px rgba(27, 94, 32, 0.12)',
+        'farmer-lg': '0 10px 25px -3px rgba(27, 94, 32, 0.18)',
+        'gold-glow': '0 0 15px 2px rgba(245, 158, 11, 0.35)',
+        'dark-card': '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
       },
-
       borderRadius: {
-        '4xl': '2rem',
-      },
-
-      animation: {
-        'fade-in': 'fade-in 0.35s ease-out',
-        'slide-up': 'slide-up 0.4s ease-out',
-      },
-
-      keyframes: {
-        'fade-in': {
-          '0%': {
-            opacity: '0',
-          },
-          '100%': {
-            opacity: '1',
-          },
-        },
-
-        'slide-up': {
-          '0%': {
-            opacity: '0',
-            transform: 'translateY(12px)',
-          },
-          '100%': {
-            opacity: '1',
-            transform: 'translateY(0)',
-          },
-        },
-      },
+        'xl': '14px',
+        '2xl': '18px',
+        '3xl': '24px'
+      }
     },
   },
-
   plugins: [],
-};
+}
