@@ -1,38 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { IntelligenceService } from '../services/intelligenceService';
+import { IntelligenceService } from '../../services/intelligenceService';
 
 export default function MarketIntelligence() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const loadMarketIntelligence = async () => {
-      try {
-        setLoading(true);
+useEffect(() => {
+  const fetchMarketIntelligence = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-        const result =
-          await IntelligenceService.getMarketIntelligence();
+      const result = await IntelligenceService.getMarketIntelligence();
 
-        setData(result);
-      } catch (err) {
-        console.error(
-          'Market intelligence error:',
-          err
-        );
+      setData(result);
+    } catch (err) {
+      console.error('Market intelligence error:', err);
 
-        setError(
-          err.response?.data?.message ||
-          'बाजार विश्लेषण प्राप्त नहीं हो सका।'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      setError(
+        err.response?.data?.message ||
+        'बाजार की जानकारी लोड नहीं हो सकी।'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadMarketIntelligence();
-  }, []);
-
+  fetchMarketIntelligence();
+}, []);
+  
   if (loading) {
     return (
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
