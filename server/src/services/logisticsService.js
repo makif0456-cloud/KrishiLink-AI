@@ -39,11 +39,14 @@ class LogisticsService {
     const rateConfig = await this.getTransportRate();
 
     const distanceKm = calculateDistanceKm(fromLat, fromLng, toLat, toLng);
+    const safeDistanceKm = Number.isFinite(Number(distanceKm))
+      ? Number(distanceKm)
+      : 0;
 
     // If buyer offers farm pickup, transport and loading are covered by buyer
     const transportCost = pickupOffered
       ? 0
-      : Math.round(distanceKm * Number(rateConfig.rate_per_km_per_quintal || 0.35) * qty);
+      : Math.round(safeDistanceKm * Number(rateConfig.rate_per_km_per_quintal || 0.35) * qty);
 
     const loadingCost = pickupOffered
       ? 0
@@ -64,7 +67,7 @@ class LogisticsService {
     const totalDeductions = transportCost + loadingCost + commissionCost + storageCost + otherCosts;
 
     return {
-      distance_km: distanceKm,
+      distance_km: safeDistanceKm,
       transport_cost: transportCost,
       loading_cost: loadingCost,
       commission_cost: commissionCost,
