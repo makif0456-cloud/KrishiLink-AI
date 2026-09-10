@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Header from './components/common/Header';
 import BottomNav from './components/common/BottomNav';
@@ -24,46 +26,112 @@ import OrdersPage from './pages/OrdersPage';
 import OrderDetail from './pages/OrderDetail';
 import BuyerDashboard from './pages/BuyerDashboard';
 
-// Phase 3 Pages
+// Phase 3
 import RecommendationPage from './pages/RecommendationPage';
 
-// Phase 4 Pages
+// Phase 4
 import AdminDashboard from './pages/AdminDashboard';
 import FpoDashboard from './pages/FpoDashboard';
 
+
 function MainLayout({ children }) {
+  const {
+    user,
+    logout,
+  } = useAuth();
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f9f5] dark:bg-darkbg-base text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div className="min-h-screen bg-[#f7f9f5] text-slate-900 transition-colors duration-200 dark:bg-darkbg-base dark:text-slate-100">
+
+      {/* Demo data notice */}
       <DemoDataBanner />
-      <Header />
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 mb-16 md:mb-6">
+
+      {/* Main header */}
+      <Header
+        user={user}
+        onLogout={logout}
+      />
+
+      {/* Page content */}
+      <main className="mx-auto min-h-[calc(100vh-68px)] w-full max-w-7xl px-3 py-5 pb-24 sm:px-6 sm:py-7 sm:pb-10 lg:px-8">
+
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
+
       </main>
+
+      {/* Mobile navigation */}
       <BottomNav />
+
     </div>
   );
 }
 
+
 function ProtectedRoute({ children }) {
   const { loading } = useAuth();
-  if (loading) return null;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f9f5] dark:bg-darkbg-base">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-700" />
+
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Loading KrishiLink...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return children;
 }
+
 
 export default function App() {
   return (
     <ErrorBoundary>
+
       <ThemeProvider>
+
         <LanguageProvider>
+
           <AuthProvider>
+
             <BrowserRouter>
+
               <Routes>
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/login" element={<MainLayout><LoginPage /></MainLayout>} />
-                <Route path="/register" element={<MainLayout><RegisterPage /></MainLayout>} />
-                
+
+                {/* ==================== PUBLIC ==================== */}
+
+                <Route
+                  path="/landing"
+                  element={<LandingPage />}
+                />
+
+                <Route
+                  path="/login"
+                  element={
+                    <MainLayout>
+                      <LoginPage />
+                    </MainLayout>
+                  }
+                />
+
+                <Route
+                  path="/register"
+                  element={
+                    <MainLayout>
+                      <RegisterPage />
+                    </MainLayout>
+                  }
+                />
+
+
+                {/* ==================== FARMER ==================== */}
+
                 <Route
                   path="/"
                   element={
@@ -86,7 +154,6 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 2: Farmer Lot Management */}
                 <Route
                   path="/sell"
                   element={
@@ -120,7 +187,8 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 3: Selling Recommendations & Net Realization */}
+                {/* ==================== RECOMMENDATIONS ==================== */}
+
                 <Route
                   path="/recommendations/:lotId"
                   element={
@@ -132,7 +200,9 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 2: Order Lifecycle & Payments */}
+
+                {/* ==================== ORDERS ==================== */}
+
                 <Route
                   path="/orders"
                   element={
@@ -155,7 +225,9 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 2: Buyer Portal */}
+
+                {/* ==================== BUYER ==================== */}
+
                 <Route
                   path="/buyer"
                   element={
@@ -167,7 +239,9 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 4: FPO Aggregation Portal */}
+
+                {/* ==================== FPO ==================== */}
+
                 <Route
                   path="/fpo"
                   element={
@@ -179,7 +253,9 @@ export default function App() {
                   }
                 />
 
-                {/* Phase 4: Admin Analytics & Controls */}
+
+                {/* ==================== ADMIN ==================== */}
+
                 <Route
                   path="/admin"
                   element={
@@ -191,12 +267,28 @@ export default function App() {
                   }
                 />
 
-                <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
+
+                {/* ==================== 404 ==================== */}
+
+                <Route
+                  path="*"
+                  element={
+                    <MainLayout>
+                      <NotFound />
+                    </MainLayout>
+                  }
+                />
+
               </Routes>
+
             </BrowserRouter>
+
           </AuthProvider>
+
         </LanguageProvider>
+
       </ThemeProvider>
+
     </ErrorBoundary>
   );
 }
