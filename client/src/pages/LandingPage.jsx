@@ -19,24 +19,34 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto text-center space-y-6 sm:space-y-8">
-      {/* Hero Visual */}
-      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-krishi-100 dark:bg-darkbg-card border-2 border-krishi-300 dark:border-darkbg-border flex items-center justify-center text-4xl sm:text-5xl shadow-md mx-auto">
-        🌾
-      </div>
+    <div className="relative min-h-[85vh] flex flex-col items-center justify-center px-4 py-8 max-w-xl mx-auto text-center space-y-6 sm:space-y-8">
+      {/* Supporting Agriculture Background */}
+      <img
+        src="/assets/images/commons/agriculture-background.png"
+        alt=""
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full object-cover opacity-5 dark:opacity-10 pointer-events-none -z-10"
+      />
 
-      {/* Main Headlines */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center space-x-1.5 bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 text-xs font-black px-3.5 py-1 rounded-full border border-krishi-300 dark:border-krishi-800">
-          <Sparkles className="w-3.5 h-3.5 text-krishi-600 dark:text-kisan-gold" />
-          <span>Smart India Hackathon 2024 (PS 26132)</span>
+      {/* Hero Visual Card with landing-hero.png */}
+      <div className="w-full h-44 sm:h-52 rounded-3xl overflow-hidden shadow-farmer border border-krishi-600/30 dark:border-darkbg-border relative group">
+        <img
+          src="/assets/images/hero/landing-hero.png"
+          alt="Indian Agriculture & Farming"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-4 sm:p-5 text-left">
+          <div className="inline-flex items-center space-x-1.5 bg-kisan-gold/90 text-gray-950 text-[10px] font-black px-2.5 py-0.5 rounded-full w-fit mb-1 shadow-xs">
+            <Sparkles className="w-3 h-3 text-gray-950" />
+            <span>स्मार्ट कृषि विपणन मंच</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-md">
+            {t('app_name')}
+          </h2>
+          <p className="text-xs text-krishi-100 font-medium line-clamp-1 drop-shadow-xs">
+            {t('app_tagline')}
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
-          {t('app_name')}
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-darkbg-muted font-medium">
-          {t('app_tagline')}
-        </p>
       </div>
 
       {/* Language Selection Box */}

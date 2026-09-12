@@ -162,6 +162,11 @@ export default function Header() {
             {/* User Profile / Logout */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-1.5 pl-1">
+                <img
+                  src="/assets/images/farmer/farmer-avatar.png"
+                  alt={user?.name || "Farmer"}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-cover border border-krishi-400/40 shadow-xs shrink-0"
+                />
                 <div className="hidden sm:flex flex-col text-right">
                   <span className="text-[11px] font-extrabold leading-none text-white truncate max-w-[90px]">
                     {user?.name?.split(' ')[0] || 'User'}

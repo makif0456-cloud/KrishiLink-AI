@@ -7,6 +7,7 @@ export default function BigButton({
   subtitle,
   icon: Icon,
   emoji,
+  image,
   color = 'green', // green, amber, blue, purple
   disabled = false,
   badge = null
@@ -29,19 +30,19 @@ export default function BigButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full p-4 sm:p-5 rounded-2xl flex items-center space-x-3.5 text-left transition-all duration-200 relative farmer-card touch-btn ${
+      className={`group w-full p-3.5 sm:p-4 rounded-2xl flex items-center space-x-3 text-left transition-all duration-200 relative farmer-card touch-btn ${
         colorMap[color] || colorMap.green
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {/* Icon or Emoji Avatar */}
-      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-inner ${iconBgMap[color] || iconBgMap.green}`}>
+      <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-inner ${iconBgMap[color] || iconBgMap.green}`}>
         {emoji ? <span>{emoji}</span> : Icon ? <Icon className="w-6 h-6 sm:w-7 sm:h-7" /> : <span>🌾</span>}
       </div>
 
       {/* Text Info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pr-1">
         <div className="flex items-center space-x-2">
-          <h3 className="text-base sm:text-lg font-black tracking-tight text-gray-900 dark:text-white truncate">
+          <h3 className="text-sm sm:text-base font-black tracking-tight text-gray-900 dark:text-white truncate">
             {title}
           </h3>
           {badge && (
@@ -51,15 +52,27 @@ export default function BigButton({
           )}
         </div>
         {subtitle && (
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-darkbg-muted font-medium leading-snug truncate mt-0.5">
+          <p className="text-xs text-gray-600 dark:text-darkbg-muted font-medium leading-snug line-clamp-2 mt-0.5">
             {subtitle}
           </p>
         )}
       </div>
 
+      {/* Optional Agriculture Card Image on Right */}
+      {image && (
+        <div className="w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden shrink-0 border border-gray-100 dark:border-darkbg-border shadow-xs">
+          <img
+            src={image}
+            alt={title}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+      )}
+
       {/* Right chevron indicator */}
-      <div className="text-gray-400 dark:text-gray-500 font-bold text-xl shrink-0 pr-1 group-hover:translate-x-1 transition">
-        <ChevronRight className="w-5 h-5" />
+      <div className="text-gray-400 dark:text-gray-500 font-bold text-xl shrink-0 group-hover:translate-x-1 transition">
+        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
     </button>
   );

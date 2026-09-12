@@ -120,15 +120,26 @@ export default function MarketPrices() {
         />
       </div>
 
-      {/* 🌟 2. Mandi Price Spread Comparison Alert */}
+      {/* 🌟 2. Mandi Price Spread Comparison Alert with market-intelligence.png */}
       {comparison && comparison.price_gap_per_quintal > 0 && (
-        <div className="bg-gradient-to-r from-emerald-600 to-krishi-800 dark:from-darkbg-card dark:to-darkbg-surface text-white p-4 sm:p-5 rounded-3xl shadow-md space-y-2 border border-emerald-500 dark:border-emerald-600/50 transition-colors">
-          <div className="flex items-center space-x-1.5 text-kisan-gold text-xs font-black uppercase tracking-wider">
+        <div className="relative overflow-hidden bg-gradient-to-r from-emerald-700 via-krishi-800 to-krishi-900 dark:from-darkbg-card dark:to-darkbg-surface text-white p-4 sm:p-5 rounded-3xl shadow-md space-y-2 border border-emerald-500 dark:border-emerald-600/50 transition-colors">
+          {/* Ambient Market Intelligence Photo Visual */}
+          <div className="absolute right-0 top-0 bottom-0 w-1/2 sm:w-1/3 pointer-events-none opacity-25 sm:opacity-35 select-none overflow-hidden">
+            <img
+              src="/assets/images/market/market-intelligence.png"
+              alt=""
+              aria-hidden="true"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-krishi-800 via-krishi-800/80 to-transparent dark:from-darkbg-card"></div>
+          </div>
+
+          <div className="flex items-center space-x-1.5 text-kisan-gold text-xs font-black uppercase tracking-wider relative z-10">
             <Sparkles className="w-4 h-4" />
             <span>{t('price_difference_alert')} (Market Opportunity)</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 relative z-10">
             <div>
               <p className="text-sm sm:text-base font-bold leading-snug">
                 🏆 {comparison.highest_mandi?.name} में सबसे अधिक भाव{' '}
@@ -153,9 +164,13 @@ export default function MarketPrices() {
         </div>
       )}
 
-      {/* 🔍 3. Filter by Mandi */}
+      {/* 🔍 3. Filter by Mandi with filter.png */}
       <div className="flex items-center space-x-2 bg-white dark:bg-darkbg-surface p-3 sm:p-3.5 rounded-2xl border border-gray-200 dark:border-darkbg-border shadow-sm transition-colors">
-        <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0 ml-1" />
+        <img
+          src="/assets/images/commons/filter.png"
+          alt="Filter"
+          className="w-4 h-4 object-contain shrink-0 ml-1"
+        />
         <select
           value={selectedMandi}
           onChange={(e) => setSelectedMandi(e.target.value)}

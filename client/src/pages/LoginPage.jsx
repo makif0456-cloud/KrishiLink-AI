@@ -64,18 +64,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto px-3 py-6 sm:py-10 space-y-6">
-      {/* Top Header Card */}
-      <div className="text-center space-y-1">
-        <div className="w-16 h-16 rounded-2xl bg-krishi-100 dark:bg-darkbg-card border border-krishi-300 dark:border-darkbg-border flex items-center justify-center text-3xl shadow-sm mx-auto mb-2">
-          👨‍🌾
+    <div className="max-w-md mx-auto px-3 py-6 sm:py-8 space-y-5">
+      {/* Agriculture Auth Banner Visual */}
+      <div className="relative w-full h-32 sm:h-36 rounded-3xl overflow-hidden shadow-sm border border-krishi-600/30 dark:border-darkbg-border group">
+        <img
+          src="/assets/images/author/auth-background.png"
+          alt="KrishiLink Agriculture"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent flex flex-col justify-end p-4 text-left">
+          <h2 className="text-xl font-black text-white tracking-tight drop-shadow-sm">
+            {t('login')}
+          </h2>
+          <p className="text-[11px] text-krishi-100 font-medium line-clamp-1 drop-shadow-xs">
+            {lang === 'hi' ? 'अपने मोबाइल नंबर से सुरक्षित प्रवेश करें' : 'Sign in securely with your mobile number'}
+          </p>
         </div>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white">
-          {t('login')}
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-darkbg-muted font-medium">
-          {lang === 'hi' ? 'अपने मोबाइल नंबर से सुरक्षित प्रवेश करें' : 'Sign in securely with your mobile number'}
-        </p>
       </div>
 
       {/* 🌟 1-Click Quick Demo Login Switcher (Crucial for SIH evaluators) */}

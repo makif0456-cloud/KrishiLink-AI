@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KrishiLink AI — Presentation Architecture & Workflows (SIH 26132)</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary: #15803d;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px 20px;
+      line-height: 1.6;
+    }
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 30px auto;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(21, 128, 61, 0.2), rgba(30, 41, 59, 0.7));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .badge {
+      display: inline-block;
+      background: #166534;
+      color: #86efac;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 2.2rem; margin-bottom: 8px; color: #ffffff; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+    }
+    .card-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #4ade80;
+    }
+    .diagram-container {
+      background: #0b1120;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: auto;
+      min-height: 250px;
+    }
+    .tip {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    @media print {
+      body { background: #fff; color: #000; }
+      .card { background: #fff; border: 1px solid #ccc; box-shadow: none; page-break-after: always; }
+      .diagram-container { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">Smart India Hackathon 2024 • Problem Statement 26132</div>
+    <h1>🌾 KrishiLink AI — Visual Architecture & Workflows</h1>
+    <p class="subtitle">Interactive diagrams for presentation slides and technical evaluation</p>
+  </div>
+
+  <div class="container">
+
+    <!-- DIAGRAM 1 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">1. System Architecture Diagram (4-Tier Separation)</h2>
+        <span style="font-size:0.85rem; color:#94a3b8;">Presentation • API Gateway • Intelligence • Persistence</span>
+      </div>
+      <div class="diagram-container">
+        <pre class="mermaid">
+graph TB
+    subgraph Tier1["1. Presentation Tier (Mobile & Hindi-First)"]
+        FarmerUI["🌾 Farmer Portal<br/>(Voice, Lots, Mandi Prices)"]
+        BuyerUI["🛒 Buyer Dashboard<br/>(Requirements, Counter-Offers)"]
+        FpoUI["🏢 FPO Aggregator<br/>(Bulk Pooling & Logistics)"]
+        AdminUI["🔐 Admin Console<br/>(Audit Logs & Verification)"]
+    end
+
+    subgraph Tier2["2. API Gateway & Core Engine (Node.js / Express)"]
+        Gateway["Express API Gateway & Router"]
+        AuthModule["JWT Auth & Role-Based Access Control (RBAC)"]
+        TradingEngine["Deterministic Trading & Symmetrical Offer Engine"]
+        NetRealization["Net Realization & Cost Calculator (No AI Drift)"]
+        BuyerMatcher["Rule-Based Buyer Matching Engine"]
+        VoiceSocket["WebSocket Live Audio Server (ws / 16kHz PCM)"]
+    end
+
+    subgraph Tier3["3. Intelligence & External Services Tier"]
+        GeminiAPI["Google Gemini 1.5 / Flash<br/>(Hindi NLU, Intent & Audio TTS)"]
+        PythonAI["Python FastAPI Microservice<br/>(ARMA Price Forecasting & Pandas)"]
+    end
+
+    subgraph Tier4["4. Data & Persistence Tier"]
+        PostgresDB[("Neon Cloud PostgreSQL<br/>13-Table Schema (ACID Compliant)")]
+        MemoryFallback[("In-Memory Demo Store<br/>Zero-Downtime Fallback")]
+    end
+
+    FarmerUI & BuyerUI & FpoUI & AdminUI -->|REST HTTPS| Gateway
+    FarmerUI <==>|WebSocket WSS (PCM Streaming)| VoiceSocket
+    Gateway --> AuthModule
+    Gateway --> TradingEngine
+    Gateway --> NetRealization
+    Gateway --> BuyerMatcher
+    VoiceSocket --> GeminiAPI
+    Gateway -->|HTTP REST| PythonAI
+    Gateway -->|pg pool| PostgresDB
+    Gateway -.->|Auto-fallback if offline| MemoryFallback
+        </pre>
+      </div>
+      <p class="tip">💡 <strong>Slide Takeaway:</strong> Demonstrates separation between conversational AI and financial business logic for regulatory compliance and reliability.</p>
+    </div>
+
+    <!-- DIAGRAM 2 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">2. End-to-End Trading & Counter-Offer Sequence</h2>
+        <span style="font-size:0.85rem; color:#94a3b8;">Lot Creation ➔ Matching ➔ Symmetrical Negotiation ➔ Order Execution</span>
+      </div>
+      <div class="diagram-container">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Farmer as 🌾 Farmer
+    participant System as ⚙️ KrishiLink Backend
+    actor Buyer as 🛒 Verified Buyer
+    participant DB as 🗄️ PostgreSQL
+
+    Farmer->>System: 1. Post Crop Lot (100 Qtl Wheat, ₹2,400/Qtl min)
+    System->>DB: Save lot & trigger Buyer Matcher
+    System-->>Buyer: 2. Ranked notification of compatible farmer produce
+    Buyer->>System: 3. Make Offer (₹2,450/Qtl, Pick-up included)
+    System-->>Farmer: 4. Instant notification of new buyer offer
+    Farmer->>System: 5. Symmetrical Counter-Offer (₹2,480/Qtl)
+    System-->>Buyer: 6. Counter-Offer visible on Buyer Dashboard
+    Buyer->>System: 7. Accept Counter-Offer
+    System->>DB: Advance Offer to "ACCEPTED"
+    System->>DB: 8. Automatically generate Order & Audit Trail
+    Note over System,DB: State Transition: Confirmed → Dispatched → Delivered
+    Buyer->>System: 9. Record Payment & Delivery Inspection
+    System->>DB: Order marked COMPLETED & Farmer paid
+        </pre>
+      </div>
+      <p class="tip">💡 <strong>Slide Takeaway:</strong> Shows bilateral counter-offering where both parties negotiate on an equal footing until mutual agreement.</p>
+    </div>
+
+    <!-- DIAGRAM 3 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">3. Multimodal Hindi Voice Assistant Pipeline</h2>
+        <span style="font-size:0.85rem; color:#94a3b8;">Low-latency Audio Streaming ➔ Gemini NLU ➔ Speech Feedback</span>
+      </div>
+      <div class="diagram-container">
+        <pre class="mermaid">
+flowchart LR
+    A["🗣️ Farmer speaks in Hindi<br/>'गेहूं का भाव क्या है?'"] --> B["🎤 Browser Web Audio API<br/>(16kHz Audio Stream)"]
+    B --> C["⚡ WebSocket / Express Gateway<br/>(/api/v1/voice/live)"]
+    C --> D["🧠 Google Gemini Multimodal<br/>(NLU + Entity Extraction)"]
+    D --> E["📊 Internal Pricing Engine<br/>(Mandi DB + Net Realization)"]
+    E --> F["📝 Response Formatted in Hindi"]
+    F --> G["🔊 Web Speech Synthesis / TTS<br/>(Audio spoken back to farmer)"]
+        </pre>
+      </div>
+      <p class="tip">💡 <strong>Slide Takeaway:</strong> Designed for accessibility, enabling rural and non-literate farmers to access market price intelligence effortlessly.</p>
+    </div>
+
+    <!-- DIAGRAM 4 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">4. Farmgate Net Realization vs. Mandi Cost Model</h2>
+        <span style="font-size:0.85rem; color:#94a3b8;">Net In-Pocket Profit Comparison</span>
+      </div>
+      <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    Produce["Farmer Enters Produce: 50 Qtl Soybean"] --> MandiBranch["Option 1: APMC Mandi"]
+    Produce --> DirectBranch["Option 2: Direct Buyer on KrishiLink"]
+
+    MandiBranch --> MPrice["Mandi Price: ₹4,800/Qtl"]
+    MPrice --> MSub["Deduct: 2.5% Commission + Loading + Freight"]
+    MSub --> MNet["Mandi Net: ₹4,520/Qtl"]
+
+    DirectBranch --> DPrice["Direct Buyer Offer: ₹4,750/Qtl"]
+    DPrice --> DSub["Deduct: ₹0 Commission (Farmgate Pickup)"]
+    DSub --> DNet["Direct Net: ₹4,750/Qtl"]
+
+    MNet & DNet --> Decision{"KrishiLink Recommendation Engine"}
+    Decision --> Recommendation["💡 Recommendation: Sell Directly to Buyer<br/>(+₹230/Quintal Extra In-Pocket Profit)"]
+        </pre>
+      </div>
+      <p class="tip">💡 <strong>Slide Takeaway:</strong> Explains how transparency in transportation, commission, and handling gives farmers maximum take-home realization.</p>
+    </div>
+
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0b1120',
+        primaryColor: '#166534',
+        primaryBorderColor: '#22c55e',
+        primaryTextColor: '#f8fafc',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#0f172a'
+      }
+    });
+  </script>
+</body>
+</html>

@@ -63,9 +63,20 @@ export default function FpoDashboard() {
   return (
     <div className="space-y-5 pb-20 max-w-5xl mx-auto py-2 sm:py-4">
 
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 dark:from-darkbg-card dark:via-darkbg-surface dark:to-darkbg-card text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-purple-800 dark:border-darkbg-border flex flex-wrap items-center justify-between gap-4 transition-colors">
-        <div>
+      {/* Top Banner with fpo-group.png visual */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 dark:from-darkbg-card dark:via-darkbg-surface dark:to-darkbg-card text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-purple-800 dark:border-darkbg-border flex flex-wrap items-center justify-between gap-4 transition-colors">
+        {/* Ambient FPO Group Photography Visual */}
+        <div className="absolute right-0 top-0 bottom-0 w-1/2 sm:w-1/3 pointer-events-none select-none overflow-hidden opacity-25 sm:opacity-35">
+          <img
+            src="/assets/images/farmer/fpo-group.png"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900 via-purple-900/85 to-transparent dark:from-darkbg-card"></div>
+        </div>
+
+        <div className="relative z-10">
           <div className="flex items-center space-x-2">
             <Landmark className="w-5 h-5 text-kisan-gold" />
             <span className="text-xs font-bold text-kisan-gold uppercase tracking-wider">

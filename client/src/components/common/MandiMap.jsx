@@ -25,8 +25,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
   const centerX = mapWidth / 2;
   const centerY = mapHeight / 2;
 
-  // Maximum visual radius.
-  // This keeps the map nicely spread out.
   const maxVisualRadius = 145;
 
   // ---------------------------------------------------------
@@ -49,7 +47,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
 
   // ---------------------------------------------------------
   // BEARING
-  // Determines direction of location from farmer
   // ---------------------------------------------------------
   const calculateBearing = (lat1, lng1, lat2, lng2) => {
     const lat1Rad = (lat1 * Math.PI) / 180;
@@ -83,13 +80,10 @@ export default function MandiMap({ farmerLocation, options = [] }) {
 
     if (validOptions.length === 0) return [];
 
-    // Get real distances first
     const prepared = validOptions.map((opt, index) => {
       const lat = Number(opt.latitude);
       const lng = Number(opt.longitude);
 
-      // Prefer backend distance because backend is responsible
-      // for the actual recommendation calculation.
       const backendDistance = Number(opt.distance_km);
 
       const calculatedDistance = calculateDistanceKm(
@@ -115,18 +109,9 @@ export default function MandiMap({ farmerLocation, options = [] }) {
         ...opt,
         _distance: distance,
         _bearing: bearing,
-        _index: index
+        _index: index,
       };
     });
-
-    // -------------------------------------------------------
-    // Convert actual distance into visual radius
-    //
-    // Example:
-    // 7 km  -> closer to farmer
-    // 50 km -> further away
-    // 150 km -> near outer ring
-    // -------------------------------------------------------
 
     const maxDistance = Math.max(
       ...prepared.map((opt) => opt._distance),
@@ -134,8 +119,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
     );
 
     return prepared.map((opt) => {
-      // Logarithmic-ish scaling makes nearby points easier
-      // to distinguish while preserving distance ordering.
       const normalized =
         Math.log10(opt._distance + 1) /
         Math.log10(maxDistance + 1);
@@ -145,14 +128,11 @@ export default function MandiMap({ farmerLocation, options = [] }) {
         normalized * maxVisualRadius
       );
 
-      // Convert bearing to SVG coordinates.
-      // Bearing 0 = North.
       const angle = (opt._bearing * Math.PI) / 180;
 
       let x = centerX + Math.sin(angle) * radius;
       let y = centerY - Math.cos(angle) * radius;
 
-      // Keep labels/pins inside the SVG.
       x = Math.max(55, Math.min(mapWidth - 55, x));
       y = Math.max(40, Math.min(mapHeight - 40, y));
 
@@ -160,14 +140,10 @@ export default function MandiMap({ farmerLocation, options = [] }) {
         ...opt,
         _x: x,
         _y: y,
-        _radius: radius
+        _radius: radius,
       };
     });
-  }, [
-    options,
-    farmerLat,
-    farmerLng
-  ]);
+  }, [options, farmerLat, farmerLng]);
 
   // ---------------------------------------------------------
   // NET PRICE HELPERS
@@ -177,7 +153,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
   };
 
   const getNetTotal = (option) => {
-    // Your backend uses net_realization as total net amount.
     if (Number.isFinite(Number(option?.net_realization))) {
       return Number(option.net_realization);
     }
@@ -190,7 +165,11 @@ export default function MandiMap({ farmerLocation, options = [] }) {
   };
 
   const getNetPerQuintal = (option) => {
-    if (Number.isFinite(Number(option?.net_realization_per_quintal))) {
+    if (
+      Number.isFinite(
+        Number(option?.net_realization_per_quintal)
+      )
+    ) {
       return Number(option.net_realization_per_quintal);
     }
 
@@ -245,20 +224,15 @@ export default function MandiMap({ farmerLocation, options = [] }) {
   return (
     <div className="bg-white dark:bg-darkbg-surface p-4 sm:p-6 rounded-3xl border border-gray-200 dark:border-darkbg-border shadow-sm space-y-4 transition-colors">
 
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
       <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-darkbg-border">
-
         <div>
           <div className="flex items-center space-x-1.5">
-
             <Navigation className="w-4 h-4 text-krishi-600 dark:text-krishi-400 shrink-0" />
 
             <h3 className="text-sm sm:text-base font-black text-gray-900 dark:text-white leading-tight">
               {t('mandi_map_title')}
             </h3>
-
           </div>
 
           <p className="text-[11px] text-gray-500 dark:text-darkbg-muted font-medium mt-0.5">
@@ -269,23 +243,25 @@ export default function MandiMap({ farmerLocation, options = [] }) {
         <span className="text-[10px] bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 font-bold px-2.5 py-0.5 rounded-full border border-krishi-200 dark:border-krishi-800">
           GPS आधारित दूरी
         </span>
-
       </div>
 
-      {/* =====================================================
-          RADAR MAP
-      ===================================================== */}
+      {/* RADAR MAP */}
       <div className="relative w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 p-2 select-none shadow-inner">
+
+        {/* Agricultural radar background */}
+        <img
+          src="/assets/images/map/mandi-radar-bg.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none mix-blend-screen"
+        />
 
         <svg
           viewBox={`0 0 ${mapWidth} ${mapHeight}`}
-          className="w-full h-64 sm:h-80"
+          className="w-full h-64 sm:h-80 relative z-10"
         >
 
-          {/* =================================================
-              RADAR RINGS
-          ================================================= */}
-
+          {/* RADAR RINGS */}
           <circle
             cx={centerX}
             cy={centerY}
@@ -314,7 +290,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
           />
 
           {/* Ring labels */}
-
           <text
             x={centerX + 48}
             y={centerY - 5}
@@ -345,10 +320,7 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             200 km
           </text>
 
-          {/* =================================================
-              DIRECTION LABELS
-          ================================================= */}
-
+          {/* DIRECTION LABELS */}
           <text
             x={centerX}
             y="18"
@@ -393,12 +365,8 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             पूर्व
           </text>
 
-          {/* =================================================
-              CONNECTION LINES
-          ================================================= */}
-
+          {/* CONNECTION LINES */}
           {mapOptions.map((opt, idx) => {
-
             const isSelected =
               selectedPin?.option_id === opt.option_id;
 
@@ -424,12 +392,8 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             );
           })}
 
-          {/* =================================================
-              FARMER
-          ================================================= */}
-
+          {/* FARMER */}
           <g>
-
             <circle
               cx={centerX}
               cy={centerY}
@@ -447,13 +411,13 @@ export default function MandiMap({ farmerLocation, options = [] }) {
               className="animate-ping"
             />
 
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r="9"
-              fill="#22c55e"
-              stroke="#ffffff"
-              strokeWidth="2"
+            <image
+              href="/assets/images/map/farmer-location.png"
+              x={centerX - 14}
+              y={centerY - 14}
+              width="28"
+              height="28"
+              className="filter drop-shadow-md"
             />
 
             <text
@@ -476,15 +440,10 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             >
               {farmerPlace}
             </text>
-
           </g>
 
-          {/* =================================================
-              OPTIONS
-          ================================================= */}
-
+          {/* OPTIONS */}
           {mapOptions.map((opt, idx) => {
-
             const isSelected =
               selectedPin?.option_id === opt.option_id;
 
@@ -510,7 +469,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
               >
 
                 {/* Selection glow */}
-
                 {isSelected && (
                   <circle
                     cx={opt._x}
@@ -522,19 +480,24 @@ export default function MandiMap({ farmerLocation, options = [] }) {
                   />
                 )}
 
-                {/* Pin */}
+                {/* Market marker */}
+                <image
+                  href="/assets/images/map/market-markers.png"
+                  x={opt._x - 10}
+                  y={opt._y - 10}
+                  width="20"
+                  height="20"
+                  className="filter drop-shadow-sm"
+                />
 
                 <circle
                   cx={opt._x}
                   cy={opt._y}
-                  r="8"
+                  r="3.5"
                   fill={pinColor}
-                  stroke="#020617"
-                  strokeWidth="2"
                 />
 
                 {/* Number */}
-
                 <text
                   x={opt._x}
                   y={opt._y + 3}
@@ -547,7 +510,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
                 </text>
 
                 {/* Name */}
-
                 <text
                   x={opt._x}
                   y={opt._y - 14}
@@ -562,7 +524,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
                 </text>
 
                 {/* Distance */}
-
                 <text
                   x={opt._x}
                   y={opt._y + 22}
@@ -573,18 +534,13 @@ export default function MandiMap({ farmerLocation, options = [] }) {
                 >
                   {Number(opt._distance).toFixed(1)} km
                 </text>
-
               </g>
             );
           })}
-
         </svg>
       </div>
 
-      {/* =====================================================
-          LEGEND
-      ===================================================== */}
-
+      {/* LEGEND */}
       <div className="flex flex-wrap items-center justify-center gap-4 text-[10px] text-gray-500 dark:text-darkbg-muted">
 
         <div className="flex items-center gap-1.5">
@@ -609,12 +565,8 @@ export default function MandiMap({ farmerLocation, options = [] }) {
 
       </div>
 
-      {/* =====================================================
-          SELECTED OPTION
-      ===================================================== */}
-
+      {/* SELECTED OPTION */}
       {selectedPin && (
-
         <div className="bg-gray-50 dark:bg-darkbg-card p-3.5 rounded-2xl border border-gray-200 dark:border-darkbg-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
 
           <div className="flex items-center space-x-3">
@@ -624,7 +576,6 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             </div>
 
             <div>
-
               <h4 className="text-sm font-black text-gray-900 dark:text-white">
                 {getOptionName(selectedPin, 0)}
               </h4>
@@ -632,6 +583,7 @@ export default function MandiMap({ farmerLocation, options = [] }) {
               <p className="text-xs text-gray-500 dark:text-darkbg-muted">
 
                 दूरी:{' '}
+
                 <strong>
                   {Number(
                     selectedPin._distance ??
@@ -653,9 +605,7 @@ export default function MandiMap({ farmerLocation, options = [] }) {
                 </strong>
 
               </p>
-
             </div>
-
           </div>
 
           <div className="text-right shrink-0">
@@ -665,18 +615,14 @@ export default function MandiMap({ farmerLocation, options = [] }) {
             </span>
 
             <span className="text-base font-black text-krishi-700 dark:text-kisan-gold">
-
               ₹
               {Math.round(
                 selectedNetTotal
               ).toLocaleString('en-IN')}
-
             </span>
 
           </div>
-
         </div>
-
       )}
 
     </div>

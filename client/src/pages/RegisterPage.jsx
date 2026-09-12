@@ -38,14 +38,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto px-3 py-6 sm:py-10 space-y-6">
-      <div className="text-center space-y-1">
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white">
-          {t('register')}
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-darkbg-muted font-medium">
-          {lang === 'hi' ? 'कृषि लिंक नेटवर्क से जुड़ें' : 'Join the KrishiLink agricultural network'}
-        </p>
+    <div className="max-w-md mx-auto px-3 py-6 sm:py-8 space-y-5">
+      {/* Agriculture Auth Banner Visual */}
+      <div className="relative w-full h-32 sm:h-36 rounded-3xl overflow-hidden shadow-sm border border-krishi-600/30 dark:border-darkbg-border group">
+        <img
+          src="/assets/images/author/auth-background.png"
+          alt="KrishiLink Agriculture"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent flex flex-col justify-end p-4 text-left">
+          <h2 className="text-xl font-black text-white tracking-tight drop-shadow-sm">
+            {t('register')}
+          </h2>
+          <p className="text-[11px] text-krishi-100 font-medium line-clamp-1 drop-shadow-xs">
+            {lang === 'hi' ? 'कृषि लिंक नेटवर्क से जुड़ें' : 'Join the KrishiLink agricultural network'}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-darkbg-surface p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-darkbg-border shadow-md space-y-4 transition-colors">

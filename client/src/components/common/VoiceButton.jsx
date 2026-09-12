@@ -14,6 +14,17 @@ export default function VoiceButton({ onVoiceQuery }) {
   return (
     <>
       <div className="bg-gradient-to-r from-krishi-800 via-krishi-900 to-krishi-950 dark:from-darkbg-card dark:via-darkbg-surface dark:to-darkbg-card text-white p-4 sm:p-5 rounded-3xl shadow-lg border border-krishi-600/50 dark:border-darkbg-border relative overflow-hidden transition-colors">
+        {/* Agricultural Voice Banner Background Element */}
+        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-2/3 pointer-events-none select-none overflow-hidden">
+          <img
+            src="/assets/images/voice/voice-banner.png"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover object-right opacity-30 sm:opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-krishi-900 via-krishi-900/80 to-transparent dark:from-darkbg-card dark:via-darkbg-card/80"></div>
+        </div>
+
         <div className="flex items-center justify-between relative z-10">
           <div className="flex-1 pr-3">
             <div className="flex items-center space-x-1.5 mb-1">
@@ -34,7 +45,7 @@ export default function VoiceButton({ onVoiceQuery }) {
           <button
             type="button"
             onClick={handleOpenVoice}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex flex-col items-center justify-center font-black text-gray-950 bg-gradient-to-tr from-kisan-amber to-kisan-gold hover:from-kisan-gold hover:to-amber-300 shadow-xl transition-all active:scale-95 touch-btn shrink-0 voice-pulse border-2 border-white/40 dark:border-darkbg-surface"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex flex-col items-center justify-center font-black text-gray-950 bg-gradient-to-tr from-kisan-amber to-kisan-gold hover:from-kisan-gold hover:to-amber-300 shadow-xl transition-all active:scale-95 touch-btn shrink-0 voice-pulse border-2 border-white/40 dark:border-darkbg-surface z-20"
             title={t('voice_button_label')}
           >
             <Mic className="w-6 h-6 sm:w-7 sm:h-7 text-gray-950" />
