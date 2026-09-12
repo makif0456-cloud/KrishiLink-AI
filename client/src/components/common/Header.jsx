@@ -18,6 +18,7 @@ export default function Header() {
   const { lang, toggleLanguage, t } = useLanguage();
   const { user, logout, isAuthenticated } = useAuth();
   const { toggleTheme, isDark } = useTheme();
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,9 +35,9 @@ export default function Header() {
   return (
     <>
       <header className="bg-krishi-800 dark:bg-darkbg-surface text-white shadow-md sticky top-0 z-30 border-b border-krishi-700/50 dark:border-darkbg-border transition-colors">
-        <div className="max-w-6xl mx-auto px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+        <div className="max-w-6xl mx-auto px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-3">
 
-          {/* ==================== BRAND ==================== */}
+          {/* ================= BRAND ================= */}
           <Link
             to="/"
             className="flex items-center space-x-2.5 group shrink-0"
@@ -46,7 +47,7 @@ export default function Header() {
             </div>
 
             <div>
-              <h1 className="text-base sm:text-lg font-black leading-tight tracking-tight flex items-center gap-1.5 font-sans">
+              <h1 className="text-base sm:text-lg font-black leading-tight tracking-tight">
                 <span className="bg-gradient-to-r from-white via-krishi-100 to-kisan-gold bg-clip-text text-transparent">
                   {t('app_name')}
                 </span>
@@ -59,16 +60,16 @@ export default function Header() {
           </Link>
 
 
-          {/* ==================== DESKTOP NAVIGATION ==================== */}
-          <nav className="hidden md:flex items-center gap-0.5 text-[11px] font-bold min-w-0">
+          {/* ================= DESKTOP NAVIGATION ================= */}
+          <nav className="hidden md:flex items-center gap-1 text-xs font-bold min-w-0">
 
             {/* Market Prices */}
             <Link
               to="/market"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
                 location.pathname === '/market'
                   ? 'bg-amber-500 text-gray-950 shadow-sm'
-                  : 'text-white hover:bg-white/10 hover:text-white'
+                  : 'text-krishi-100 hover:bg-krishi-700/60 hover:text-white'
               }`}
             >
               <span>📊</span>
@@ -79,10 +80,10 @@ export default function Header() {
             {/* Sell Produce */}
             <Link
               to="/sell"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
                 location.pathname === '/sell'
                   ? 'bg-amber-500 text-gray-950 shadow-sm'
-                  : 'text-white hover:bg-white/10 hover:text-white'
+                  : 'text-krishi-100 hover:bg-krishi-700/60 hover:text-white'
               }`}
             >
               <span>🌾</span>
@@ -93,10 +94,10 @@ export default function Header() {
             {/* My Lots */}
             <Link
               to="/my-lots"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
                 location.pathname.startsWith('/my-lots')
                   ? 'bg-amber-500 text-gray-950 shadow-sm'
-                  : 'text-white hover:bg-white/10 hover:text-white'
+                  : 'text-krishi-100 hover:bg-krishi-700/60 hover:text-white'
               }`}
             >
               <span>📦</span>
@@ -107,10 +108,10 @@ export default function Header() {
             {/* My Orders */}
             <Link
               to="/orders"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all ${
                 location.pathname === '/orders'
                   ? 'bg-amber-500 text-gray-950 shadow-sm'
-                  : 'text-white hover:bg-white/10 hover:text-white'
+                  : 'text-krishi-100 hover:bg-krishi-700/60 hover:text-white'
               }`}
             >
               <span>🚚</span>
@@ -121,9 +122,9 @@ export default function Header() {
             {/* Buyer Portal */}
             <Link
               to="/buyer"
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full whitespace-nowrap transition-all font-black ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all font-black ${
                 location.pathname.startsWith('/buyer')
-                  ? 'bg-amber-500 text-gray-950 shadow-sm'
+                  ? 'bg-amber-500 text-gray-950 shadow-sm ring-2 ring-amber-300/40'
                   : 'bg-amber-500 hover:bg-amber-400 text-gray-950 shadow-sm'
               }`}
             >
@@ -136,13 +137,13 @@ export default function Header() {
             {isFpo && (
               <Link
                 to="/fpo"
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all font-black ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all font-black ${
                   location.pathname.startsWith('/fpo')
                     ? 'bg-purple-600 text-white shadow-sm'
-                    : 'bg-purple-600/90 hover:bg-purple-500 text-white'
+                    : 'bg-purple-700 hover:bg-purple-600 text-white'
                 }`}
               >
-                <Landmark className="w-3 h-3" />
+                <Landmark className="w-3.5 h-3.5" />
                 <span>एफपीओ</span>
               </Link>
             )}
@@ -152,26 +153,26 @@ export default function Header() {
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all font-black ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition-all font-black ${
                   location.pathname.startsWith('/admin')
                     ? 'bg-rose-600 text-white shadow-sm'
-                    : 'bg-rose-600/90 hover:bg-rose-500 text-white'
+                    : 'bg-rose-700 hover:bg-rose-600 text-white'
                 }`}
               >
-                <ShieldCheck className="w-3 h-3" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 <span>एडमिन</span>
               </Link>
             )}
           </nav>
 
 
-          {/* ==================== RIGHT ACTIONS ==================== */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* ================= RIGHT ACTIONS ================= */}
+          <div className="flex items-center gap-2 shrink-0">
 
-            {/* Voice Assistant */}
+            {/* Voice Button */}
             <button
               onClick={() => setVoiceModalOpen(true)}
-              className="bg-gradient-to-r from-kisan-amber to-kisan-gold hover:from-kisan-gold hover:to-amber-400 text-gray-950 font-black px-2.5 py-1.5 rounded-full flex items-center gap-1 text-[11px] shadow-md transition active:scale-95 whitespace-nowrap"
+              className="bg-gradient-to-r from-kisan-amber to-kisan-gold hover:from-kisan-gold hover:to-amber-400 text-gray-950 font-black px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs shadow-md transition active:scale-95 whitespace-nowrap"
               title="बोलकर पूछें (Voice Assistant)"
             >
               <Mic className="w-4 h-4 text-gray-950 animate-pulse" />
@@ -182,7 +183,7 @@ export default function Header() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-full bg-krishi-900/60 dark:bg-darkbg-card hover:bg-krishi-700 text-krishi-100 hover:text-white transition border border-krishi-600/40 dark:border-darkbg-border active:scale-95 shrink-0"
+              className="p-2 rounded-xl bg-krishi-900/60 dark:bg-darkbg-card hover:bg-krishi-700 text-krishi-100 hover:text-white transition border border-krishi-600/40 dark:border-darkbg-border active:scale-95 shrink-0"
               title={
                 isDark
                   ? 'Light Mode (दिन का मोड)'
@@ -201,7 +202,7 @@ export default function Header() {
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-full bg-krishi-900/60 dark:bg-darkbg-card hover:bg-krishi-700 text-krishi-100 hover:text-white transition border border-krishi-600/40 dark:border-darkbg-border flex items-center gap-1 text-[11px] font-bold active:scale-95 whitespace-nowrap"
+              className="px-2.5 py-2 rounded-xl bg-krishi-900/60 dark:bg-darkbg-card hover:bg-krishi-700 text-krishi-100 hover:text-white transition border border-krishi-600/40 dark:border-darkbg-border flex items-center gap-1.5 text-xs font-bold active:scale-95 whitespace-nowrap"
               title="भाषा बदलें (Switch Language)"
             >
               <Globe className="w-3.5 h-3.5 text-kisan-gold" />
@@ -212,20 +213,18 @@ export default function Header() {
             </button>
 
 
-            {/* ==================== AUTHENTICATED USER ==================== */}
+            {/* ================= USER ================= */}
             {isAuthenticated ? (
               <div className="flex items-center gap-1.5 pl-1">
 
-                {/* Avatar */}
                 <img
                   src="/assets/images/farmer/farmer-avatar.png"
                   alt={user?.name || 'Farmer'}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-krishi-400/40 shadow-xs shrink-0"
+                  className="w-8 h-8 rounded-xl object-cover border border-krishi-400/40 shadow-xs shrink-0"
                 />
 
-                {/* User Name */}
                 <div className="hidden lg:flex flex-col text-right">
-                  <span className="text-[11px] font-extrabold leading-none text-white truncate max-w-[80px]">
+                  <span className="text-[11px] font-extrabold leading-none text-white truncate max-w-[90px]">
                     {user?.name?.split(' ')[0] || 'User'}
                   </span>
 
@@ -238,20 +237,18 @@ export default function Header() {
                   </span>
                 </div>
 
-                {/* Logout */}
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 sm:p-2 rounded-full bg-rose-900/40 hover:bg-rose-600 text-rose-200 hover:text-white transition border border-rose-700/50 active:scale-95"
+                  className="p-2 rounded-xl bg-rose-900/40 hover:bg-rose-600 text-rose-200 hover:text-white transition border border-rose-700/50 active:scale-95"
                   title={t('logout')}
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              /* Login Button */
               <Link
                 to="/login"
-                className="bg-white hover:bg-krishi-100 text-krishi-800 text-[11px] font-extrabold px-3.5 py-1.5 rounded-full transition shadow-sm whitespace-nowrap"
+                className="bg-white hover:bg-krishi-100 text-krishi-800 text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-sm whitespace-nowrap"
               >
                 {t('login')}
               </Link>
@@ -261,7 +258,7 @@ export default function Header() {
       </header>
 
 
-      {/* ==================== VOICE ASSISTANT MODAL ==================== */}
+      {/* ================= VOICE MODAL ================= */}
       <VoiceAssistantModal
         isOpen={voiceModalOpen}
         onClose={() => setVoiceModalOpen(false)}
