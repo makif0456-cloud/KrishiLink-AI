@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { TradingService } from '../services/tradingService';
+import { getFullImageUrl } from '../config/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { PlusCircle, ArrowRight, Package, Calendar, Award, MapPin } from 'lucide-react';
+import { PlusCircle, ArrowRight, Package, Calendar, Award, MapPin, Camera } from 'lucide-react';
 
 export default function MyLots() {
   const { t, lang } = useLanguage();
@@ -55,6 +56,7 @@ export default function MyLots() {
           {lots.map(lot => {
             const isSold = lot.status === 'sold';
             const hasOffers = (lot.offers_count || 0) > 0;
+            const cropPhoto = lot.crop_image_url || (Array.isArray(lot.photos) && lot.photos[0]) || null;
 
             return (
               <div
@@ -65,7 +67,17 @@ export default function MyLots() {
                 {/* Status Badge */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-2.5">
-                    <span className="text-3xl filter drop-shadow-xs">{lot.commodity_icon || '🌾'}</span>
+                    {cropPhoto ? (
+                      <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-gray-200 dark:border-darkbg-border shrink-0 bg-gray-100 dark:bg-darkbg-card shadow-xs">
+                        <img
+                          src={getFullImageUrl(cropPhoto)}
+                          alt={lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-3xl filter drop-shadow-xs">{lot.commodity_icon || '🌾'}</span>
+                    )}
                     <div>
                       <h3 className="text-base font-black text-gray-900 dark:text-white leading-tight">
                         {lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en}

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { TradingService } from '../services/tradingService';
+import { getFullImageUrl } from '../config/api';
 import MatchingBuyersList from '../components/farmer/MatchingBuyersList';
 import OfferComparisonView from '../components/farmer/OfferComparisonView';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { ArrowLeft, ArrowRight, MapPin, Scale, Award, Calendar, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, Scale, Award, Calendar, CheckCircle2, ShieldAlert, Sparkles, Camera } from 'lucide-react';
 
 export default function LotDetail() {
   const { id } = useParams();
@@ -58,6 +59,8 @@ export default function LotDetail() {
       </div>
     );
   }
+
+  const cropPhotoUrl = lot.crop_image_url || (Array.isArray(lot.photos) && lot.photos[0]) || null;
 
   return (
     <div className="max-w-4xl mx-auto py-2 sm:py-4 space-y-4 sm:space-y-6">
@@ -139,6 +142,40 @@ export default function LotDetail() {
             </span>
           </div>
         </div>
+
+        {/* 📷 Farmer Crop Quality Photo */}
+        {cropPhotoUrl && (
+          <div className="pt-3 border-t border-gray-100 dark:border-darkbg-border space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5">
+                <Camera className="w-4 h-4 text-krishi-600 dark:text-kisan-gold" />
+                <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                  {t('crop_photo_label')}
+                </h4>
+              </div>
+              <span className="bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-krishi-200 dark:border-krishi-800">
+                गुणवत्ता: Grade {lot.quality_grade}
+              </span>
+            </div>
+
+            <div className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-darkbg-border bg-black/5 aspect-video sm:aspect-21/9 max-h-72 flex items-center justify-center">
+              <img
+                src={getFullImageUrl(cropPhotoUrl)}
+                alt={`${lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en} crop photo`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-white text-xs">
+                <span className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  {t('crop_photo_by_farmer')}
+                </span>
+                <span className="text-[11px] text-gray-300">
+                  {t('crop_photo_disclaimer')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tabs: Received Offers vs Matching Buyers */}

@@ -4,6 +4,11 @@ const { v4: uuidv4 } = require('uuid');
 class Lot {
   static async create(lotData) {
     const id = lotData.id || uuidv4();
+    const crop_image_url = lotData.crop_image_url || (Array.isArray(lotData.photos) && lotData.photos[0]) || null;
+    const photos = Array.isArray(lotData.photos) && lotData.photos.length > 0
+      ? lotData.photos
+      : (crop_image_url ? [crop_image_url] : []);
+
     const newLot = {
       id,
       farmer_id: lotData.farmer_id,
@@ -15,7 +20,8 @@ class Lot {
       latitude: lotData.latitude ? parseFloat(lotData.latitude) : null,
       longitude: lotData.longitude ? parseFloat(lotData.longitude) : null,
       expected_price: lotData.expected_price ? Number(lotData.expected_price) : null,
-      photos: lotData.photos || [],
+      crop_image_url,
+      photos,
       status: 'active',
       notes: lotData.notes || '',
       expires_at: lotData.expires_at || new Date(Date.now() + 14 * 86400000), // 14 days default
@@ -27,14 +33,14 @@ class Lot {
       const sql = `
         INSERT INTO lots (
           id, farmer_id, commodity_id, quantity, unit, quality_grade, quality_params,
-          latitude, longitude, expected_price, photos, status, notes, expires_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          latitude, longitude, expected_price, crop_image_url, photos, status, notes, expires_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *
       `;
       const values = [
         newLot.id, newLot.farmer_id, newLot.commodity_id, newLot.quantity, newLot.unit,
         newLot.quality_grade, JSON.stringify(newLot.quality_params), newLot.latitude,
-        newLot.longitude, newLot.expected_price, JSON.stringify(newLot.photos),
+        newLot.longitude, newLot.expected_price, newLot.crop_image_url, JSON.stringify(newLot.photos),
         newLot.status, newLot.notes, newLot.expires_at
       ];
       const res = await query(sql, values);

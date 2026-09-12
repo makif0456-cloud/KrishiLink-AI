@@ -260,6 +260,11 @@ async function initDatabase() {
     const client = await pool.connect();
     isPgConnected = true;
     console.log('✅ Connected to PostgreSQL database successfully.');
+    try {
+      await client.query('ALTER TABLE lots ADD COLUMN IF NOT EXISTS crop_image_url TEXT;');
+    } catch (colErr) {
+      console.warn('Notice: crop_image_url check:', colErr.message);
+    }
     client.release();
   } catch (err) {
     isPgConnected = false;

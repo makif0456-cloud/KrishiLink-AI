@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -23,7 +24,9 @@ const { DEMO_DISCLAIMER_HI } = require('./config/constants');
 const app = express();
 
 // Security & Parsing Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -31,6 +34,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded media statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));

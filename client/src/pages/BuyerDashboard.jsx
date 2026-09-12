@@ -3,9 +3,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { TradingService } from '../services/tradingService';
 import { MarketService } from '../services/marketService';
+import { getFullImageUrl } from '../config/api';
 import OrderTracker from '../components/common/OrderTracker';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { PlusCircle, ShieldCheck, MapPin, Truck, Sparkles, DollarSign, Package, CheckCircle2, XCircle, MessageSquare, AlertCircle } from 'lucide-react';
+import { PlusCircle, ShieldCheck, MapPin, Truck, Sparkles, DollarSign, Package, CheckCircle2, XCircle, MessageSquare, AlertCircle, Camera, Eye, X } from 'lucide-react';
 
 export default function BuyerDashboard() {
   const { t, lang } = useLanguage();
@@ -18,6 +19,9 @@ export default function BuyerDashboard() {
   const [myOffers, setMyOffers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Crop Photo Lightbox Modal State
+  const [photoModal, setPhotoModal] = useState(null);
 
   // Requirement Modal State
   const [reqModalOpen, setReqModalOpen] = useState(false);
@@ -215,53 +219,92 @@ export default function BuyerDashboard() {
 
               {availableLots.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {availableLots.map(lot => (
-                    <div
-                      key={lot.id}
-                      className="bg-white dark:bg-darkbg-surface p-4 sm:p-5 rounded-3xl border border-gray-200 dark:border-darkbg-border shadow-sm space-y-3 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-3xl">{lot.commodity_icon || '🌾'}</span>
+                  {availableLots.map(lot => {
+                    const lotPhoto = lot.crop_image_url || (Array.isArray(lot.photos) && lot.photos[0]) || null;
+
+                    return (
+                      <div
+                        key={lot.id}
+                        className="bg-white dark:bg-darkbg-surface p-4 sm:p-5 rounded-3xl border border-gray-200 dark:border-darkbg-border shadow-sm space-y-3 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-3xl">{lot.commodity_icon || '🌾'}</span>
+                            <div>
+                              <h3 className="text-base font-black text-gray-900 dark:text-white leading-tight">
+                                {lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en}
+                              </h3>
+                              <span className="text-xs text-gray-500 dark:text-darkbg-muted font-semibold">
+                                {lot.farmer_name} • {lot.farmer_district || 'भोपाल'}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-xs bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 font-black px-2.5 py-0.5 rounded-full border border-krishi-200 dark:border-krishi-800">
+                            Grade {lot.quality_grade}
+                          </span>
+                        </div>
+
+                        {/* 📷 Crop Photo Thumbnail for Buyer Quality Verification */}
+                        {lotPhoto && (
+                          <div
+                            onClick={() => setPhotoModal({
+                              url: getFullImageUrl(lotPhoto),
+                              commodityName: lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en,
+                              grade: lot.quality_grade,
+                              farmerName: lot.farmer_name,
+                              location: lot.farmer_district || 'भोपाल'
+                            })}
+                            className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-darkbg-border bg-black/5 aspect-video sm:aspect-2/1 max-h-44 cursor-pointer group shadow-xs hover:opacity-95 transition"
+                          >
+                            <img
+                              src={getFullImageUrl(lotPhoto)}
+                              alt={`${lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en} crop photo`}
+                              className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-2.5 text-white">
+                              <div className="flex items-center justify-between text-[11px] font-bold">
+                                <span className="flex items-center gap-1 text-emerald-300">
+                                  <Camera className="w-3.5 h-3.5 shrink-0" />
+                                  {t('crop_photo_by_farmer')}
+                                </span>
+                                <span className="bg-white/20 backdrop-blur-xs px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
+                                  <Eye className="w-3 h-3" />
+                                  {t('view_crop_photo')}
+                                </span>
+                              </div>
+                              <span className="text-[9px] text-gray-300 mt-0.5">
+                                {t('crop_photo_disclaimer')}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-darkbg-card p-3 rounded-2xl border border-gray-100 dark:border-darkbg-border">
                           <div>
-                            <h3 className="text-base font-black text-gray-900 dark:text-white leading-tight">
-                              {lang === 'hi' ? lot.commodity_name_hi : lot.commodity_name_en}
-                            </h3>
-                            <span className="text-xs text-gray-500 dark:text-darkbg-muted font-semibold">
-                              {lot.farmer_name} • {lot.farmer_district || 'भोपाल'}
-                            </span>
+                            <span className="text-gray-400 dark:text-darkbg-muted text-[10px] font-bold block">मात्रा</span>
+                            <span className="text-base font-black text-gray-900 dark:text-white">{lot.quantity} {lot.unit || 'क्विंटल'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 dark:text-darkbg-muted text-[10px] font-bold block">अपेक्षित भाव</span>
+                            <span className="text-base font-black text-krishi-700 dark:text-kisan-gold">₹{lot.expected_price || 2500}/क्विंटल</span>
                           </div>
                         </div>
-                        <span className="text-xs bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 font-black px-2.5 py-0.5 rounded-full border border-krishi-200 dark:border-krishi-800">
-                          Grade {lot.quality_grade}
-                        </span>
+
+                        {lot.notes && (
+                          <p className="text-xs text-gray-600 dark:text-gray-300 italic bg-gray-50 dark:bg-darkbg-card p-2 rounded-xl">"{lot.notes}"</p>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenOfferModal(lot)}
+                          className="w-full py-2.5 bg-krishi-600 hover:bg-krishi-700 active:scale-98 text-white font-black rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-1 shadow touch-btn transition"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          <span>{t('make_offer_btn')}</span>
+                        </button>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-darkbg-card p-3 rounded-2xl border border-gray-100 dark:border-darkbg-border">
-                        <div>
-                          <span className="text-gray-400 dark:text-darkbg-muted text-[10px] font-bold block">मात्रा</span>
-                          <span className="text-base font-black text-gray-900 dark:text-white">{lot.quantity} {lot.unit || 'क्विंटल'}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400 dark:text-darkbg-muted text-[10px] font-bold block">अपेक्षित भाव</span>
-                          <span className="text-base font-black text-krishi-700 dark:text-kisan-gold">₹{lot.expected_price || 2500}/क्विंटल</span>
-                        </div>
-                      </div>
-
-                      {lot.notes && (
-                        <p className="text-xs text-gray-600 dark:text-gray-300 italic bg-gray-50 dark:bg-darkbg-card p-2 rounded-xl">"{lot.notes}"</p>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenOfferModal(lot)}
-                        className="w-full py-2.5 bg-krishi-600 hover:bg-krishi-700 active:scale-98 text-white font-black rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-1 shadow touch-btn transition"
-                      >
-                        <DollarSign className="w-4 h-4" />
-                        <span>{t('make_offer_btn')}</span>
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="bg-white dark:bg-darkbg-surface p-8 rounded-3xl border border-gray-200 dark:border-darkbg-border text-center text-xs text-gray-500 dark:text-darkbg-muted">
@@ -378,6 +421,59 @@ export default function BuyerDashboard() {
                             </span>
                           </div>
                         </div>
+
+                        {/* 📷 Offer Crop Photo Inspection for Buyer */}
+                        {(() => {
+                          const offerPhoto = o.crop_image_url || (Array.isArray(o.lot_photos) && o.lot_photos[0]) || null;
+                          if (!offerPhoto) return null;
+
+                          return (
+                            <div className="flex items-center space-x-3 bg-gray-50 dark:bg-darkbg-card p-2.5 rounded-2xl border border-gray-100 dark:border-darkbg-border">
+                              <div
+                                onClick={() => setPhotoModal({
+                                  url: getFullImageUrl(offerPhoto),
+                                  commodityName: lang === 'hi' ? o.commodity_name_hi : o.commodity_name_en,
+                                  grade: o.lot_grade || 'A',
+                                  farmerName: o.farmer_name,
+                                  location: o.farmer_district || 'भोपाल'
+                                })}
+                                className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 dark:border-darkbg-border shrink-0 cursor-pointer group shadow-xs bg-gray-100 dark:bg-darkbg-surface"
+                              >
+                                <img
+                                  src={getFullImageUrl(offerPhoto)}
+                                  alt="Crop photo"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                                />
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                  <Eye className="w-4 h-4 text-white" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0 text-xs">
+                                <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                                  <Camera className="w-3.5 h-3.5 text-krishi-600 dark:text-kisan-gold shrink-0" />
+                                  {t('crop_photo_by_farmer')} (Grade {o.lot_grade || 'A'})
+                                </span>
+                                <p className="text-[10px] text-gray-500 dark:text-darkbg-muted mt-0.5 truncate">
+                                  {t('crop_photo_disclaimer')}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => setPhotoModal({
+                                    url: getFullImageUrl(offerPhoto),
+                                    commodityName: lang === 'hi' ? o.commodity_name_hi : o.commodity_name_en,
+                                    grade: o.lot_grade || 'A',
+                                    farmerName: o.farmer_name,
+                                    location: o.farmer_district || 'भोपाल'
+                                  })}
+                                  className="text-[11px] text-krishi-700 dark:text-kisan-gold font-bold hover:underline mt-1 flex items-center gap-1 touch-btn"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  <span>{t('view_crop_photo')}</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* 🌾 Farmer Counter Offer Notification Banner & Accept/Reject Actions */}
                         {isCountered && o.counter_price && (
@@ -560,12 +656,47 @@ export default function BuyerDashboard() {
               💰 {t('make_offer_btn')}
             </h3>
 
-            <div className="bg-krishi-50 dark:bg-darkbg-card p-3.5 rounded-2xl border border-krishi-200 dark:border-darkbg-border text-xs">
-              <span className="text-gray-500 dark:text-darkbg-muted font-bold block">किसान की फसल:</span>
-              <span className="text-sm font-black text-gray-950 dark:text-white">
-                {selectedLot.commodity_name_hi} — {selectedLot.quantity} क्विंटल (Grade {selectedLot.quality_grade})
-              </span>
-              <p className="text-gray-600 dark:text-darkbg-muted mt-0.5">📍 {selectedLot.farmer_district || 'भोपाल'} • अपेक्षित: ₹{selectedLot.expected_price}/क्विंटल</p>
+            <div className="bg-krishi-50 dark:bg-darkbg-card p-3.5 rounded-2xl border border-krishi-200 dark:border-darkbg-border text-xs space-y-2">
+              <div>
+                <span className="text-gray-500 dark:text-darkbg-muted font-bold block">किसान की फसल:</span>
+                <span className="text-sm font-black text-gray-950 dark:text-white">
+                  {selectedLot.commodity_name_hi} — {selectedLot.quantity} क्विंटल (Grade {selectedLot.quality_grade})
+                </span>
+                <p className="text-gray-600 dark:text-darkbg-muted mt-0.5">📍 {selectedLot.farmer_district || 'भोपाल'} • अपेक्षित: ₹{selectedLot.expected_price}/क्विंटल</p>
+              </div>
+
+              {/* Crop Photo Preview in Make Offer Modal */}
+              {(() => {
+                const selectedLotPhoto = selectedLot.crop_image_url || (Array.isArray(selectedLot.photos) && selectedLot.photos[0]) || null;
+                if (!selectedLotPhoto) return null;
+
+                return (
+                  <div
+                    onClick={() => setPhotoModal({
+                      url: getFullImageUrl(selectedLotPhoto),
+                      commodityName: selectedLot.commodity_name_hi,
+                      grade: selectedLot.quality_grade,
+                      farmerName: selectedLot.farmer_name,
+                      location: selectedLot.farmer_district || 'भोपाल'
+                    })}
+                    className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-darkbg-border aspect-video max-h-36 cursor-pointer group shadow-xs bg-black/5"
+                  >
+                    <img
+                      src={getFullImageUrl(selectedLotPhoto)}
+                      alt="Crop photo"
+                      className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-2 text-white text-[10px] font-bold">
+                      <span className="flex items-center gap-1 text-emerald-300">
+                        <Camera className="w-3 h-3" /> {t('crop_photo_by_farmer')}
+                      </span>
+                      <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded">
+                        <Eye className="w-3 h-3" /> {t('view_crop_photo')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <form onSubmit={handleSendOffer} className="space-y-3">
@@ -629,6 +760,80 @@ export default function BuyerDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 📷 Crop Quality Photo Lightbox Modal */}
+      {photoModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in"
+          onClick={() => setPhotoModal(null)}
+        >
+          <div
+            className="bg-white dark:bg-darkbg-surface max-w-xl w-full rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-darkbg-border flex flex-col max-h-[90vh] transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-100 dark:border-darkbg-border flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-krishi-50 dark:bg-darkbg-card flex items-center justify-center text-krishi-600 dark:text-kisan-gold">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                    {photoModal.commodityName} — {t('crop_photo_label')}
+                  </h3>
+                  <span className="text-[11px] text-gray-500 dark:text-darkbg-muted">
+                    किसान: {photoModal.farmerName || 'किसान'} • {photoModal.location || 'मध्य प्रदेश'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="bg-krishi-100 dark:bg-krishi-900/60 text-krishi-800 dark:text-krishi-300 text-xs font-black px-2.5 py-1 rounded-full border border-krishi-200 dark:border-krishi-800">
+                  Grade {photoModal.grade}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPhotoModal(null)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-darkbg-card text-gray-500 dark:text-gray-300 transition"
+                  aria-label="Close photo"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body / Full Image */}
+            <div className="relative bg-black/95 flex items-center justify-center overflow-hidden max-h-[60vh] p-2">
+              <img
+                src={photoModal.url}
+                alt={`${photoModal.commodityName} crop photo`}
+                className="max-w-full max-h-[58vh] object-contain rounded-xl"
+              />
+            </div>
+
+            {/* Modal Footer / Farmer Reference Disclaimer */}
+            <div className="p-4 bg-gray-50 dark:bg-darkbg-card border-t border-gray-100 dark:border-darkbg-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  {t('crop_photo_by_farmer')}
+                </span>
+                <p className="text-[10px] text-gray-500 dark:text-darkbg-muted mt-0.5">
+                  {t('crop_photo_disclaimer')}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPhotoModal(null)}
+                className="px-4 py-2 bg-gray-200 dark:bg-darkbg-surface hover:bg-gray-300 dark:hover:bg-darkbg-hover text-gray-800 dark:text-gray-200 font-bold rounded-xl text-xs touch-btn self-end sm:self-auto transition"
+              >
+                {t('close')}
+              </button>
+            </div>
           </div>
         </div>
       )}

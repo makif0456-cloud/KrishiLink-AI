@@ -46,7 +46,7 @@ class Offer {
     if (isPgConnected()) {
       const sql = `
         SELECT o.*, 
-               l.commodity_id, l.quantity AS lot_quantity, l.unit AS lot_unit, l.quality_grade AS lot_grade, l.farmer_id,
+               l.commodity_id, l.quantity AS lot_quantity, l.unit AS lot_unit, l.quality_grade AS lot_grade, l.crop_image_url, l.photos AS lot_photos, l.farmer_id,
                c.name_hi AS commodity_name_hi, c.name_en AS commodity_name_en, c.icon AS commodity_icon,
                u_buyer.name AS buyer_name, u_buyer.business_name, u_buyer.phone AS buyer_phone, u_buyer.district AS buyer_district, u_buyer.is_verified AS buyer_verified,
                u_farmer.name AS farmer_name, u_farmer.phone AS farmer_phone, u_farmer.village AS farmer_village, u_farmer.district AS farmer_district
@@ -74,6 +74,8 @@ class Offer {
       lot_quantity: lot.quantity,
       lot_unit: lot.unit,
       lot_grade: lot.quality_grade,
+      crop_image_url: lot.crop_image_url || (lot.photos && lot.photos[0]) || null,
+      lot_photos: lot.photos || [],
       farmer_id: lot.farmer_id,
       commodity_id: lot.commodity_id,
       commodity_name_hi: comm.name_hi,
@@ -128,7 +130,7 @@ class Offer {
     if (isPgConnected()) {
       const sql = `
         SELECT o.*, 
-               l.quantity AS lot_quantity, l.quality_grade AS lot_grade,
+               l.quantity AS lot_quantity, l.quality_grade AS lot_grade, l.crop_image_url, l.photos AS lot_photos,
                c.name_hi AS commodity_name_hi, c.name_en AS commodity_name_en, c.icon AS commodity_icon,
                u_farmer.name AS farmer_name, u_farmer.district AS farmer_district, u_farmer.state AS farmer_state
         FROM offers o
@@ -153,6 +155,8 @@ class Offer {
           ...o,
           lot_quantity: lot.quantity,
           lot_grade: lot.quality_grade,
+          crop_image_url: lot.crop_image_url || (lot.photos && lot.photos[0]) || null,
+          lot_photos: lot.photos || [],
           commodity_name_hi: comm.name_hi,
           commodity_name_en: comm.name_en,
           commodity_icon: comm.icon,

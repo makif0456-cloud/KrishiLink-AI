@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS lots (
     latitude        DECIMAL(10,7),
     longitude       DECIMAL(10,7),
     expected_price  DECIMAL(10,2),
+    crop_image_url  TEXT,
     photos          JSONB DEFAULT '[]',
     status          VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'offer_received', 'sold', 'expired', 'cancelled')),
     notes           TEXT,

@@ -294,4 +294,99 @@ describe('Phase 2: Core Trading & Transaction Lifecycle Tests', () => {
     assert.ok(Array.isArray(res.body.data.payments));
     assert.strictEqual(res.body.data.payments[0].amount, 248000);
   });
+
+  // 7. CROP QUALITY PHOTO CAPTURE & VERIFICATION
+  let uploadedPhotoUrl = '';
+  let lotWithPhotoId = '';
+
+  it('Farmer uploads crop photograph via POST /api/v1/lots/upload', async () => {
+    // 1x1 fake JPEG buffer
+    const fakeJpegBuffer = Buffer.from([
+      0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+      0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x43,
+      0x00, 0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01,
+      0x11, 0x00, 0xff, 0xc4, 0x00, 0x1f, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01,
+      0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff,
+      0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00, 0x7f, 0xff, 0xd9
+    ]);
+
+    const res = await request(app)
+      .post('/api/v1/lots/upload')
+      .set('Authorization', `Bearer ${farmerToken}`)
+      .attach('photo', fakeJpegBuffer, { filename: 'sample-wheat-grade-a.jpg', contentType: 'image/jpeg' });
+
+    assert.strictEqual(res.statusCode, 201);
+    assert.ok(res.body.data.image_url);
+    assert.ok(res.body.data.image_url.startsWith('/uploads/lots/'));
+    uploadedPhotoUrl = res.body.data.image_url;
+  });
+
+  it('Upload rejects non-image or invalid mime type', async () => {
+    const textBuffer = Buffer.from('this is not an image');
+
+    const res = await request(app)
+      .post('/api/v1/lots/upload')
+      .set('Authorization', `Bearer ${farmerToken}`)
+      .attach('photo', textBuffer, { filename: 'malicious.txt', contentType: 'text/plain' });
+
+    assert.strictEqual(res.statusCode, 400);
+  });
+
+  it('Farmer creates lot with crop_image_url and Grade A quality', async () => {
+    const res = await request(app)
+      .post('/api/v1/lots')
+      .set('Authorization', `Bearer ${farmerToken}`)
+      .send({
+        commodity_id: 'b0000000-0000-0000-0000-000000000001',
+        quantity: 100,
+        unit: 'quintal',
+        quality_grade: 'A',
+        expected_price: 2550,
+        crop_image_url: uploadedPhotoUrl,
+        latitude: 23.6341,
+        longitude: 77.4338,
+        notes: 'उच्च गुणवत्ता वाला प्रीमियम गेहूं (Grade A Wheat)'
+      });
+
+    assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.body.data.lot.crop_image_url, uploadedPhotoUrl);
+    assert.strictEqual(res.body.data.lot.quality_grade, 'A');
+    lotWithPhotoId = res.body.data.lot.id;
+  });
+
+  it('GET /api/v1/lots/:id returns the crop_image_url for farmer & buyer inspection', async () => {
+    const res = await request(app)
+      .get(`/api/v1/lots/${lotWithPhotoId}`)
+      .set('Authorization', `Bearer ${farmerToken}`);
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.body.data.lot.crop_image_url, uploadedPhotoUrl);
+    assert.strictEqual(res.body.data.lot.quality_grade, 'A');
+  });
+
+  it('Buyer makes offer and GET /api/v1/offers/my includes crop_image_url for visual verification', async () => {
+    // Buyer creates offer
+    const offerRes = await request(app)
+      .post('/api/v1/offers')
+      .set('Authorization', `Bearer ${buyerToken}`)
+      .send({
+        lot_id: lotWithPhotoId,
+        offered_price: 2500,
+        pickup_offered: true,
+        notes: 'फोटो देखने के बाद गुणवत्ता उत्तम लग रही है।'
+      });
+
+    assert.strictEqual(offerRes.statusCode, 201);
+
+    // Buyer fetches own offers
+    const myOffersRes = await request(app)
+      .get('/api/v1/offers/my')
+      .set('Authorization', `Bearer ${buyerToken}`);
+
+    assert.strictEqual(myOffersRes.statusCode, 200);
+    const targetOffer = myOffersRes.body.data.offers.find(o => o.lot_id === lotWithPhotoId);
+    assert.ok(targetOffer, 'Offer on photo lot should exist');
+    assert.strictEqual(targetOffer.crop_image_url, uploadedPhotoUrl, 'Offer must contain the farmer uploaded crop photo URL');
+    assert.strictEqual(targetOffer.lot_grade, 'A');
+  });
 });

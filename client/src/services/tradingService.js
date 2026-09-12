@@ -2,6 +2,18 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
 export const TradingService = {
+  // Crop Photo Upload
+  async uploadLotPhoto(file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const res = await axios.post(`${API_BASE_URL}/lots/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data.data;
+  },
+
   // Lots
   async createLot(lotData) {
     const res = await axios.post(`${API_BASE_URL}/lots`, lotData);
